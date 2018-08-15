@@ -9,12 +9,14 @@ namespace cr
 	/** Basic coroutine state. */
 	class Coroutine
 	{
+	public:
+		Coroutine() = default;
 	protected:
 		/** Contains the last saved line of execution. */
 		std::size_t m_coroutine_line;
-	public:
+
 		/** Prepares the coroutine for execution. */
-		Coroutine();
+		void prepare();
 	};
 }
 
@@ -26,11 +28,12 @@ class name : public ::cr::Coroutine \
 { \
 public:
 
-/** @def CR_EXTERNAL
-	Ends a coroutine declaration, and marks it as externally implemented. */
-#define CR_EXTERNAL \
+/** @def CR_EXTERNAL(args)
+	Ends a coroutine declaration, and marks it as externally implemented.
+	`args` are arguments that are to be supplied to the coroutine on every invokation. */
+#define CR_EXTERNAL(...) \
 public: \
-	bool operator()(); \
+	bool operator()(__VA_ARGS__); \
 };
 
 /** @def CR_STATE
@@ -38,19 +41,21 @@ public: \
 #define CR_STATE \
 private:
 
-/** @def CR_IMPL_BEGIN(name)
-	Begins an external implementation of a coroutine. */
-#define CR_IMPL_BEGIN(name) \
-	bool name::operator()() \
+/** @def CR_IMPL_BEGIN(name, args)
+	Begins an external implementation of a coroutine.
+	`args` are arguments that are to be supplied to the coroutine on every invokation. */
+#define CR_IMPL_BEGIN(name, ...) \
+	bool name::operator()(__VA_ARGS__) \
 	{ \
 		switch(::cr::Coroutine::m_coroutine_line) \
 		{ \
 		default: \
 		case 0:
 
-/** @def CR_INL_BEGIN
-	Marks the beginning of an inline coroutine implementation. */
-#define CR_INL_BEGIN \
+/** @def CR_INL_BEGIN(args)
+	Marks the beginning of an inline coroutine implementation.
+	`args` are arguments that are to be supplied to the coroutine on every invokation. */
+#define CR_INL_BEGIN(...) \
 public: \
 	inline bool operator()() \
 	{ \
@@ -61,12 +66,19 @@ public: \
 
 /** @def CR_CHECKPOINT
 	Saves the current execution as entry point for the next invokation. */
+// Add [[fallthrough]] in C++17.
+#if __cplusplus > 201402L
 #define CR_CHECKPOINT do { \
 			::cr::Coroutine::m_coroutine_line = __LINE__; \
 			[[fallthrough]]; \
 			case __LINE__:; \
 		} while(0)
-
+#else
+#define CR_CHECKPOINT do { \
+			::cr::Coroutine::m_coroutine_line = __LINE__; \
+			case __LINE__:; \
+		} while(0)
+#endif
 /** @def CR_RESTORE
 	Yields and continues execution at the last checkpoint. */
 #define CR_RESTORE do { \
@@ -91,20 +103,24 @@ public: \
 			return true; \
 		} while(0)
 
-/** @def CR_CALL(state)
+/** @def CR_CALL(state, args)
 	Calls a coroutine from inside another coroutine.
-	Sets a checkpoint before calling, so it behaves like a regular function call. */
-#define CR_CALL(state) do { \
+	Sets a checkpoint before calling, so it behaves like a regular function call.
+	The coroutine needs to be initialised manually.
+	`args` are arguments that are to be supplied to the coroutine on every invokation (not initialisation). */
+#define CR_CALL(state, ...) do { \
 			CR_CHECKPOINT; \
-			if(!state()) \
+			if(!state(__VA_ARGS__)) \
 				return false; \
 		} while(0)
 
-/** @def CR_CALL_NAKED(state)
+/** @def CR_CALL_NAKED(state, args)
 	Calls a coroutine from inside another coroutine.
-	Does not set a checkpoint before calling. */
-#define CR_CALL_NAKED(state) do { \
-			if(!state()) \
+	Does not set a checkpoint before calling.
+	The coroutine needs to be initialised manually.
+	`args` are arguments that are to be supplied to the coroutine on every invokation (not initialisation). */
+#define CR_CALL_NAKED(state, ...) do { \
+			if(!state(__VA_ARGS__)) \
 				return false; \
 		} while(0)
 

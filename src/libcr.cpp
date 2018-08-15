@@ -2,8 +2,8 @@
 
 namespace cr
 {
-	Coroutine::Coroutine():
-		m_coroutine_line(0)
+	void Coroutine::prepare()
 	{
+		m_coroutine_line = 0;
 	}
 }

@@ -32,13 +32,13 @@ COROUTINE(Count)
 	/** Initalises the counter execution.
 	@param[in] start:
 		Where to start counting. */
-	Count(
+	void prepare(
 		std::size_t start);
 CR_STATE
 	// In this section, the internal state of the coroutine is declared.
 	std::size_t m_counter;
 // Inline coroutine definition.
-CR_INL_BEGIN
+CR_INL_BEGIN()
 	// In this section, the coroutine code is written.
 	while(m_counter)
 	{
@@ -58,10 +58,11 @@ std::size_t Count::counter() const
 	return m_counter;
 }
 
-Count::Count(
-	std::size_t start):
-	m_counter(start)
+void Count::prepare(
+	std::size_t start)
 {
+	Coroutine::prepare();
+	m_counter = start;
 }
 ```
 
@@ -69,7 +70,8 @@ The coroutine can be used as follows:
 
 ```c++
 // Instantiate the routine execution.
-Count count(42);
+Count count;
+count.prepare(42);
 
 // Execute until it is finished.
 while(!count())
@@ -97,21 +99,22 @@ The control flow only resumes after the called coroutine is finished.
 
 ```c++
 COROUTINE(Inner)
-	Inner(
-		std::size_t count):
-		count(count)
+	void prepare(
+		std::size_t count)
 	{
+		Coroutine::prepare();
+		this->count = count;
 	}
 CR_STATE
 	std::size_t i;
 	std::size_t count;
-CR_EXTERNAL
+CR_EXTERNAL()
 
 COROUTINE(Outer)
 CR_STATE
 	Inner m_inner;
-CR_INL_BEGIN
-	m_inner = Inner(42);
+CR_INL_BEGIN()
+	m_inner.prepare(42);
 	// Execute Inner(42).
 	CR_CALL(m_inner);
 CR_INL_END
