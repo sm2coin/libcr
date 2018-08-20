@@ -3,6 +3,15 @@
 
 #include <cstddef>
 #include <utility>
+#include <cassert>
+
+/** @def LIBCR_MAGIC_NUMBER
+	A random number that is used to check whether a coroutine was properly initialised. */
+#define LIBCR_MAGIC_NUMBER 0x38eee375b1b29314
+
+#ifndef _NDEBUG
+#define LIBCR_DEBUG
+#endif
 
 namespace cr
 {
@@ -50,7 +59,7 @@ private:
 		switch(::cr::Coroutine::m_coroutine_line) \
 		{ \
 		default: \
-		case 0:
+			assert(m_coroutine_line == LIBCR_MAGIC_NUMBER && "Coroutine not initialised!");
 
 /** @def CR_INL_BEGIN(args)
 	Marks the beginning of an inline coroutine implementation.
@@ -62,7 +71,7 @@ public: \
 		switch(::cr::Coroutine::m_coroutine_line) \
 		{ \
 		default: \
-		case 0:
+			assert(m_coroutine_line == LIBCR_MAGIC_NUMBER);
 
 /** @def CR_CHECKPOINT
 	Saves the current execution as entry point for the next invokation. */

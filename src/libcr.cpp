@@ -4,6 +4,6 @@ namespace cr
 {
 	void Coroutine::prepare()
 	{
-		m_coroutine_line = 0;
+		m_coroutine_line = LIBCR_MAGIC_NUMBER;
 	}
 }
