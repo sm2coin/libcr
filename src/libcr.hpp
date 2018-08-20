@@ -57,7 +57,7 @@ private:
 	`args` are arguments that are to be supplied to the coroutine on every invokation. */
 #define CR_INL_BEGIN(...) \
 public: \
-	inline bool operator()() \
+	inline bool operator()(__VA_ARGS__) \
 	{ \
 		switch(::cr::Coroutine::m_coroutine_line) \
 		{ \
