@@ -1,168 +1,145 @@
 #ifndef __coroutines_coroutines_hpp_defined
 #define __coroutines_coroutines_hpp_defined
 
+#include "primitives.hpp"
+
 #include <cstddef>
 #include <utility>
-#include <cassert>
 
 /** @def LIBCR_MAGIC_NUMBER
 	A random number that is used to check whether a coroutine was properly initialised. */
 #define LIBCR_MAGIC_NUMBER 0x38eee375b1b29314
 
-#ifndef _NDEBUG
-#define LIBCR_DEBUG
-#endif
-
 namespace cr
 {
+	/** Instruction pointer type.
+		This is used to save the execution of a coroutine. */
+	typedef void *ip_t;
+	/** Coroutine implementation pointer type.
+		This is used to call coroutines of unknown type.
+	@param[in] self:
+		The coroutine state to execute.
+	@return
+		Whether the coroutine is done. */
+	typedef bool (*impl_t)(void * self);
+
 	/** Basic coroutine state. */
-	class Coroutine
+	class CoroutineBase
 	{
 	public:
-		Coroutine() = default;
-	protected:
-		/** Contains the last saved line of execution. */
-		std::size_t m_coroutine_line;
+#ifdef LIBCR_DEBUG
+		/** Used when debugging, to check whether the coroutine was initialised. */
+		std::size_t m_magic_number;
+#endif
+		/** The coroutine implementation.
+			Used to enter a coroutine. */
+		impl_t m_coroutine_start;
+		/** Contains the last saved instruction pointer. */
+		ip_t m_coroutine_ip;
 
-		/** Prepares the coroutine for execution. */
-		void prepare();
+		/** Prepares the coroutine for execution.
+		@param[in] coroutine_start:
+			The coroutine start instruction pointer. */
+		void prepare(
+			impl_t coroutine_start);
+
+		/** Calls the coroutine.
+		@return
+			Whether the coroutine is done. */
+		inline bool operator()();
+	};
+
+	template<class DerivedCoroutine>
+	/** Helper class for easier initialisation of plain coroutines.
+		Plain coroutines are not optimised for nesting, entering into a callstack has linear complexity. However, plain coroutines have less restrictions on their behaviour, and can be used to have multiple "simultaneous" child coroutines, using `CR_PCALL_NAKED`.
+	@tparam DerivedCoroutine:
+		The coroutine type that derives from this type. */
+	class Coroutine : protected CoroutineBase
+	{
+	protected:
+		/** Prepares the coroutine. */
+		inline void prepare();
+
+	public:
+		/** Executes the coroutine.
+		@return
+			Whether the coroutine is done. */
+		inline bool operator()();
+	};
+
+	template<class T>
+	class NestCoroutine;
+
+	/** Base class for nested coroutines.
+		Nested coroutines are optimised for deeper nesting, and entering into a callstack has constant complexity instead of linear complexity. */
+	class NestCoroutineBase : public CoroutineBase
+	{
+	public:
+		/** The outermost coroutine. */
+		NestCoroutineBase * libcr_root;
+		/** When `is_root()`, points to the deepest nested coroutine, otherwise to the immediate parent coroutine. */
+		NestCoroutineBase * libcr_stack;
+
+
+		/** Whether this coroutine is the outermost coroutine. */
+		inline bool is_root() const;
+	};
+
+	/** Helper class that exposes the nested coroutine base to other nested coroutines. */
+	class ExposeNestCoroutineBase
+	{
+		template<class T>
+		friend class NestCoroutine;
+	protected:
+		template<
+			class T,
+			class = typename std::enable_if<
+				std::is_base_of<NestCoroutineBase, T>::value
+			>::type>
+		/** Returns the nested coroutine base pointer of a nested coroutine.
+		@param[in] coroutine:
+			The coroutine whose base to expose.
+		@return
+			The coroutine's base. */
+		static constexpr NestCoroutineBase * base(
+			T * coroutine);
+	};
+
+	template<class DerivedCoroutine>
+	/** Helper type for initialising and calling nested coroutines.
+	@tparam DerivedCoroutine:
+		The deriving type. */
+	class NestCoroutine : public NestCoroutineBase
+	{
+		friend DerivedCoroutine;
+	public:
+		/** Prepares the coroutine to be the root coroutine. */
+		inline void prepare();
+
+		/** Prepares the coroutine to be a child coroutine.
+		@param[in] root:
+			The root coroutine.
+		@param[in] parent:
+			The parent coroutine. */
+		inline void prepare(
+			NestCoroutineBase * root,
+			NestCoroutineBase * parent);
+
+		/** Executes the coroutine.
+		@return
+			Whether the coroutine is donel. */
+		inline bool operator()();
+
+		/** Calls the coroutine of a `DerivedCoroutine`.
+		@param[in] self:
+			The coroutine state to execute.
+		@return
+			Whether the coroutine is done. */
+		static bool lambda(
+			void * self);
 	};
 }
 
-/** @def COROUTINE(name)
-	Starts a coroutine declaration.
-	Also starts the public interface declaration. */
-#define COROUTINE(name) \
-class name : public ::cr::Coroutine \
-{ \
-public:
-
-/** @def CR_EXTERNAL(args)
-	Ends a coroutine declaration, and marks it as externally implemented.
-	`args` are arguments that are to be supplied to the coroutine on every invokation. */
-#define CR_EXTERNAL(...) \
-public: \
-	bool operator()(__VA_ARGS__); \
-};
-
-/** @def CR_STATE
-	Starts the internal / state variable section of a coroutine. */
-#define CR_STATE \
-private:
-
-/** @def CR_IMPL_BEGIN(name, args)
-	Begins an external implementation of a coroutine.
-	`args` are arguments that are to be supplied to the coroutine on every invokation. */
-#define CR_IMPL_BEGIN(name, ...) \
-	bool name::operator()(__VA_ARGS__) \
-	{ \
-		switch(::cr::Coroutine::m_coroutine_line) \
-		{ \
-		default: \
-			assert(m_coroutine_line == LIBCR_MAGIC_NUMBER && "Coroutine not initialised!");
-
-/** @def CR_INL_BEGIN(args)
-	Marks the beginning of an inline coroutine implementation.
-	`args` are arguments that are to be supplied to the coroutine on every invokation. */
-#define CR_INL_BEGIN(...) \
-public: \
-	inline bool operator()(__VA_ARGS__) \
-	{ \
-		switch(::cr::Coroutine::m_coroutine_line) \
-		{ \
-		default: \
-			assert(m_coroutine_line == LIBCR_MAGIC_NUMBER);
-
-/** @def CR_CHECKPOINT
-	Saves the current execution as entry point for the next invokation. */
-// Add [[fallthrough]] in C++17.
-#if __cplusplus > 201402L
-#define CR_CHECKPOINT do { \
-			::cr::Coroutine::m_coroutine_line = __LINE__; \
-			[[fallthrough]]; \
-			case __LINE__:; \
-		} while(0)
-#else
-#define CR_CHECKPOINT do { \
-			::cr::Coroutine::m_coroutine_line = __LINE__; \
-			case __LINE__:; \
-		} while(0)
-#endif
-/** @def CR_RESTORE
-	Yields and continues execution at the last checkpoint. */
-#define CR_RESTORE do { \
-			return false; \
-		} while(0)
-
-// uses https://de.wikipedia.org/wiki/Duff%E2%80%99s_Device
-// to jump directly back into the code (e.g. the while loop)
-
-/** @def CR_YIELD
-	Halts the coroutine's execution until its next invokation. */
-#define CR_YIELD do {\
-			::cr::Coroutine::m_coroutine_line = __LINE__; \
-			return false; \
-			case __LINE__:; \
-		} while(0)
-
-/** @def CR_RETURN
-	Terminates the coroutine and marks it as executed. */
-#define CR_RETURN do { \
-			CR_CHECKPOINT; \
-			return true; \
-		} while(0)
-
-/** @def CR_CALL(state, args)
-	Calls a coroutine from inside another coroutine.
-	Sets a checkpoint before calling, so it behaves like a regular function call.
-	The coroutine needs to be initialised manually.
-	`args` are arguments that are to be supplied to the coroutine on every invokation (not initialisation). */
-#define CR_CALL(state, ...) do { \
-			CR_CHECKPOINT; \
-			if(!state(__VA_ARGS__)) \
-				return false; \
-		} while(0)
-
-/** @def CR_CALL_NAKED(state, args)
-	Calls a coroutine from inside another coroutine.
-	Does not set a checkpoint before calling.
-	The coroutine needs to be initialised manually.
-	`args` are arguments that are to be supplied to the coroutine on every invokation (not initialisation). */
-#define CR_CALL_NAKED(state, ...) do { \
-			if(!state(__VA_ARGS__)) \
-				return false; \
-		} while(0)
-
-
-/** @def CR_INL_END_NORETURN
-	Ends a coroutine declaration and its inline definition.
-	Special use for functions whose control flow does not reach the end of the function body to save an implicit return. */
-#define CR_INL_END_NORETURN \
-		} \
-	} \
-};
-
-/** @def @CR_IMPL_END_NORETURN
-	Ends a coroutine's external implementation.
-	Special use for functions whose control flow does not reach the end of the function body to save an implicit return. */
-#define CR_IMPL_END_NORETURN \
-		} \
-	}
-
-
-
-/** @def CR_INL_END
-	Ends a coroutine declaration and its inline definition.
-	Contains an implicit return statement. */
-#define CR_INL_END \
-		CR_RETURN; \
-CR_INL_END_NORETURN
-
-/** @def CR_IMPL_END
-	Ends a coroutine's external implementation.
-	Contains an implicit return statement. */
-#define CR_IMPL_END \
-		CR_RETURN; \
-CR_IMPL_END_NORETURN
+#include "libcr.inl"
 
 #endif
