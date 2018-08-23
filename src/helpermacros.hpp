@@ -1,3 +1,5 @@
+/** @file helpermacros.hpp
+	Contains internal helper macros. */
 #ifndef __libcr_helpermacros_hpp_defined
 #define __libcr_helpermacros_hpp_defined
 

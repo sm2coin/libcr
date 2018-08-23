@@ -1,3 +1,5 @@
+/** @file libcr.hpp
+	The main header of the library. */
 #ifndef __coroutines_coroutines_hpp_defined
 #define __coroutines_coroutines_hpp_defined
 
@@ -51,7 +53,7 @@ namespace cr
 
 	template<class DerivedCoroutine>
 	/** Helper class for easier initialisation of plain coroutines.
-		Plain coroutines are not optimised for nesting, entering into a callstack has linear complexity. However, plain coroutines have less restrictions on their behaviour, and can be used to have multiple "simultaneous" child coroutines, using `CR_PCALL_NAKED`.
+		Plain coroutines are not optimised for nesting, entering into a callstack has linear complexity. However, plain coroutines have less restrictions on their behaviour, and can be used to have multiple "simultaneous" child coroutines, using `#CR_PCALL_NAKED`.
 	@tparam DerivedCoroutine:
 		The coroutine type that derives from this type. */
 	class Coroutine : protected CoroutineBase
@@ -130,7 +132,7 @@ namespace cr
 			Whether the coroutine is donel. */
 		inline bool operator()();
 
-		/** Calls the coroutine of a `DerivedCoroutine`.
+		/** Calls the coroutine of a `#DerivedCoroutine`.
 		@param[in] self:
 			The coroutine state to execute.
 		@return

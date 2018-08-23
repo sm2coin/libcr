@@ -1,6 +1,7 @@
-# coroutines
+# libcr
 
-Coroutine library draft.
+> Coroutine library draft.
+> libcr is intended to create minimal overhead coroutines with basic functionality.
 
 ## Compiling
 
@@ -9,6 +10,19 @@ You need to have `CMake` installed. Navigate to the `libcr` directory, and execu
 	cmake .
 
 This will generate makefiles or project files (depending on your setup), and also create an include directory containing all headers and the license, in `libcr/include`.
+
+## Documentation
+
+If you have `doxygen` installed, navigate to the `libcr` directory, and execute:
+
+	doxygen Doxyfile
+
+This generates documentation in `libcr/html`.
+
+## License
+
+A copy of the license can be found in `libcr/LICENSE`.
+libcr is licensed under the GNU Affero General Public License, version 3.
 
 ## Introduction
 
@@ -36,7 +50,7 @@ Plain coroutines are very basic coroutines without optimisation, but can be used
 
 Create a nested coroutine with `COROUTINE(name)` or a plain coroutine with `COROUTINE_PLAIN(name)`.
 Following that comes the public interface of the coroutine, such as paramters or functions.
-Then, `CR_STATE` is followed by the local variables of the function.
-Then, use `CR_INLINE` for an inline coroutine definition, or `CR_EXTERNAL`, to mark the coroutine as externally implemented.
+Then, `#CR_STATE` is followed by the local variables of the function.
+Then, use `#CR_INLINE` for an inline coroutine definition, or `#CR_EXTERNAL`, to mark the coroutine as externally implemented.
 
 More information can be extracted from the documentation of the classes and macros.

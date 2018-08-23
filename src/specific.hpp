@@ -1,3 +1,5 @@
+/** @file specific.hpp
+	Contains compiler specific versions of macros that cannot be written in standard C++. */
 #ifndef __libcr_specific_hpp_defined
 #define __libcr_specific_hpp_defined
 

@@ -1,3 +1,5 @@
+/** @file primitives.hpp
+	Contains macros to be used as primitives for coroutines. */
 #ifndef __libcr_primitives_hpp_defined
 #define __libcr_primitives_hpp_defined
 
@@ -126,8 +128,8 @@
 	}
 #endif
 
-/** @def CR_IMPL_(name)
-	Starts the external implementation of the given nested coroutine. Must be followed by `CR_IMPL_END`. */
+/** @def CR_IMPL(name)
+	Starts the external implementation of the given nested coroutine. Must be followed by `#CR_IMPL_END`. */
 #define CR_IMPL(name) bool name::_cr_implementation() \
 { \
 	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_IMPL"); \
@@ -138,7 +140,7 @@
 	}
 
 /** @def CR_PIMPL(name)
-	Starts the external implementation of the given plain coroutine. Must be followed by `CR_PIMPL_END`. */
+	Starts the external implementation of the given plain coroutine. Must be followed by `#CR_PIMPL_END`. */
 #define CR_PIMPL(name) bool name::_cr_implementation() \
 { \
 	LIBCR_HELPER_ASSERT_PLAIN_SELF("CR_PIMPL"); \
@@ -149,7 +151,7 @@
 	}
 
 /** @def CR_PINLINE
-	Starts the inline implementation of the given plain coroutine. Must be followed by `CR_PINLINE_END`. */
+	Starts the inline implementation of the given plain coroutine. Must be followed by `#CR_PINLINE_END`. */
 #define CR_PINLINE private:bool _cr_implementation() \
 { \
 	LIBCR_HELPER_ASSERT_PLAIN_SELF("CR_PIMPL"); \
@@ -167,7 +169,7 @@
 };
 
 /** @def CR_INLINE
-	Starts the inline implementation of the given nested coroutine. Must be followed by `CR_INLINE_END`. */
+	Starts the inline implementation of the given nested coroutine. Must be followed by `#CR_INLINE_END`. */
 #define CR_INLINE private:bool _cr_implementation() \
 { \
 	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_INLINE"); \
@@ -183,11 +185,11 @@
 
 
 /** @def CR_EXTERNAL
-	Ends the definition of a nested of a coroutine declaration, and marks it as externally implemented. Use `CR_IMPL` and `CR_PIMPL` to implement the coroutine. */
+	Ends the definition of a nested of a coroutine declaration, and marks it as externally implemented. Use `#CR_IMPL` and `#CR_PIMPL` to implement the coroutine. */
 #define CR_EXTERNAL bool _cr_implementation(); \
 };
-/** @def CR_EXTERNAL
-	Ends the definition of a nested of a coroutine declaration, and marks it as externally implemented, using the `inline` specifier. Use `CR_IMPL` and `CR_PIMPL` to implement the coroutine. */
+/** @def CR_EXTERNAL_INLINE
+	Ends the definition of a nested of a coroutine declaration, and marks it as externally implemented, using the `inline` specifier. Use `#CR_IMPL` and `#CR_PIMPL` to implement the coroutine. */
 #define CR_EXTERNAL_INLINE inline bool _cr_implementation(); \
 };
 
@@ -208,7 +210,7 @@ public: \
 
 /** @def COROUTINE_PLAIN(name)
 	Creates a plain coroutine with the given name.
-	Plain coroutines are not optimised for nesting, entering into a callstack has linear complexity. However, plain coroutines have less restrictions on their behaviour, and can be used to have multiple "simultaneous" child coroutines, using `CR_PCALL_NAKED`. */
+	Plain coroutines are not optimised for nesting, entering into a callstack has linear complexity. However, plain coroutines have less restrictions on their behaviour, and can be used to have multiple "simultaneous" child coroutines, using `#CR_PCALL_NAKED`. */
 #define COROUTINE_PLAIN(name) \
 class name : protected ::cr::Coroutine<name> \
 { \
