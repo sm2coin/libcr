@@ -197,7 +197,7 @@
 	Creates a nested coroutine with the given name.
 	Nested coroutines are optimised for deeper nesting, and entering into a callstack has constant complexity instead of linear complexity. */
 #define COROUTINE(name) \
-class name : private ::cr::NestCoroutine<name>, ExposeNestCoroutineBase \
+class name : private ::cr::NestCoroutine<name>, ::cr::ExposeNestCoroutineBase \
 { \
 	friend class ::cr::NestCoroutine<name>; \
 	typedef name LibCrSelf; \
