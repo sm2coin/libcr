@@ -1,15 +1,31 @@
 #include "libcr.hpp"
-#include <iostream>
 
 namespace cr
 {
-	void CoroutineBase::prepare(
-		impl_t coroutine_start)
+	void PlainCoroutine::prepare()
 	{
 #ifdef LIBCR_DEBUG
-		m_magic_number = LIBCR_MAGIC_NUMBER;
+		libcr_magic_number = LIBCR_MAGIC_NUMBER;
 #endif
-		m_coroutine_start = coroutine_start;
-		m_coroutine_ip = 0;
+		libcr_coroutine_ip = 0;
+	}
+
+	void Coroutine::prepare(
+		impl_t coroutine)
+	{
+		PlainCoroutine::prepare();
+		libcr_root = this;
+		libcr_stack = this;
+		libcr_coroutine = coroutine;
+	}
+
+	void Coroutine::prepare(
+		impl_t coroutine,
+		Coroutine * parent)
+	{
+		PlainCoroutine::prepare();
+		libcr_root = parent->libcr_root;
+		libcr_stack = parent;
+		libcr_coroutine = coroutine;
 	}
 }

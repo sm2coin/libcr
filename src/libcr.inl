@@ -1,87 +1,75 @@
 #include <cinttypes>
 namespace cr
 {
-	template<class T, class ...Args>
-	void prepare(
-		T &self,
-		Args &&... args)
-	{
-		self.prepare(std::forward<Args>(args)...);
-	}
-
-	bool CoroutineBase::operator()()
-	{
-		assert(m_magic_number == LIBCR_MAGIC_NUMBER);
-
-		typedef bool (*lambda_t)(void *);
-
-		return reinterpret_cast<lambda_t&>(m_coroutine_start)(this);
-	}
-
 	template<class DerivedCoroutine>
-	void Coroutine<DerivedCoroutine>::prepare()
+	bool PlainCoroutineHelper<DerivedCoroutine>::operator()()
 	{
-		CoroutineBase::prepare([](void * self)->bool
-			{
-				return static_cast<DerivedCoroutine *>(self)->_cr_implementation();
-			});
+		assert(libcr_magic_number == LIBCR_MAGIC_NUMBER);
+
+		return DerivedCoroutine::_cr_implementation();
 	}
 
-	template<class DerivedCoroutine>
-	bool Coroutine<DerivedCoroutine>::operator()()
-	{
-		assert(
-			static_cast<Coroutine<DerivedCoroutine> *>(
-				static_cast<DerivedCoroutine *>(
-					reinterpret_cast<void*>(this))) == this
-			&& "DerivedCoroutine `this` must be == Coroutine `this`.");
-
-		return CoroutineBase::operator()();
-	}
-
-	bool NestCoroutineBase::is_root() const
+	bool Coroutine::is_root() const
 	{
 		return libcr_root == this;
 	}
 
+	bool Coroutine::is_child() const
+	{
+		return libcr_root->libcr_stack == this;
+	}
+
+	bool Coroutine::operator()()
+	{
+		assert(libcr_magic_number == LIBCR_MAGIC_NUMBER);
+		assert(is_root() && "Only call the root coroutine.");
+
+		return libcr_stack->libcr_coroutine(libcr_stack);
+	}
+
+	bool Coroutine::directly_call_child()
+	{
+		assert(libcr_magic_number == LIBCR_MAGIC_NUMBER);
+		assert(is_child() && "Only call the child coroutine.");
+
+		return libcr_coroutine(this);
+	}
+
 	template<class T, class>
-	constexpr NestCoroutineBase * ExposeNestCoroutineBase::base(
+	constexpr Coroutine * ExposeCoroutine::base(
 		T * coroutine)
 	{
 		return coroutine;
 	}
 
-	template<class DerivedCoroutine>
-	void NestCoroutine<DerivedCoroutine>::prepare(
-		NestCoroutineBase * root,
-		NestCoroutineBase * parent)
+	template<class T, class>
+	bool ExposeCoroutine::directly_call_child(
+		T & coroutine)
 	{
-		NestCoroutineBase::libcr_root = root;
-		NestCoroutineBase::libcr_stack = parent;
+		assert(coroutine.libcr_magic_number == LIBCR_MAGIC_NUMBER);
+		assert(coroutine.is_child() && "Only call the child coroutine.");
 
-		CoroutineBase::prepare([](void * self)->bool
-		{
-			return static_cast<DerivedCoroutine *>(self)->_cr_implementation();
-		});
+		return coroutine._cr_implementation();
 	}
 
 	template<class DerivedCoroutine>
-	void NestCoroutine<DerivedCoroutine>::prepare()
+	void CoroutineHelper<DerivedCoroutine>::prepare()
 	{
-		NestCoroutineBase::libcr_root = this;
-		NestCoroutineBase::libcr_stack = this;
-		CoroutineBase::prepare(&lambda);
+		Coroutine::prepare(
+			&DerivedCoroutine::lambda);
 	}
 
 	template<class DerivedCoroutine>
-	bool NestCoroutine<DerivedCoroutine>::operator()()
+	void CoroutineHelper<DerivedCoroutine>::prepare(
+		Coroutine * parent)
 	{
-		assert((void*)this == (CoroutineBase*) this);
-		return NestCoroutineBase::libcr_root->libcr_stack->CoroutineBase::operator()();
+		Coroutine::prepare(
+			&DerivedCoroutine::lambda,
+			parent);
 	}
 
 	template<class DerivedCoroutine>
-	bool NestCoroutine<DerivedCoroutine>::lambda(
+	bool CoroutineHelper<DerivedCoroutine>::lambda(
 		void * self)
 	{
 		return static_cast<DerivedCoroutine *>(self)->_cr_implementation();

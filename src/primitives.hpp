@@ -50,10 +50,10 @@
 #define LIBCR_HELPER_CALL(id, ...) do { \
 	LIBCR_HELPER_ASSERT_CHILD; \
 	LIBCR_HELPER_ASSERT_NESTED("CR_CALL", decltype(LIBCR_HELPER_HEAD(__VA_ARGS__))); \
-	LIBCR_HELPER_PREPARE(__VA_ARGS__, NestCoroutineBase::libcr_root, this); \
-	NestCoroutineBase::libcr_root->libcr_stack = ExposeNestCoroutineBase::base(&(LIBCR_HELPER_HEAD(__VA_ARGS__))); \
+	LIBCR_HELPER_PREPARE(__VA_ARGS__, this); \
+	Coroutine::libcr_root->libcr_stack = ExposeCoroutine::base(&(LIBCR_HELPER_HEAD(__VA_ARGS__))); \
 	LIBCR_HELPER_SAVE(id); \
-	return (LIBCR_HELPER_HEAD(__VA_ARGS__))(); \
+	return ExposeCoroutine::directly_call_child(LIBCR_HELPER_HEAD(__VA_ARGS__)); \
 	LIBCR_HELPER_LABEL(id):; \
 } while(0)
 
@@ -101,8 +101,8 @@
 				return true; \
 			else \
 			{ \
-				NestCoroutineBase::libcr_root->libcr_stack = NestCoroutineBase::libcr_stack; \
-				return (*NestCoroutineBase::libcr_stack)(); \
+				Coroutine::libcr_root->libcr_stack = Coroutine::libcr_stack; \
+				return Coroutine::libcr_stack->directly_call_child(); \
 			} \
 		LIBCR_HELPER_LABEL(id): \
 			assert(!"NESTED coroutine called after return."); \
@@ -121,45 +121,39 @@
 				return true; \
 			else \
 			{ \
-				m_root->m_stack.child = m_stack.parent; \
-				return (*m_stack.parent)(); \
+				Coroutine::libcr_root->libcr_stack = Coroutine::libcr_stack; \
+				return Coroutine::libcr_stack->directly_call_child(); \
 			}
 		} while(0); \
 	}
 #endif
+
+#define LIBCR_HELPER_INTRO do { \
+	if(libcr_coroutine_ip) \
+		CR_RESTORE; \
+	CR_CHECKPOINT; \
+} while(0)
 
 /** @def CR_IMPL(name)
 	Starts the external implementation of the given nested coroutine. Must be followed by `#CR_IMPL_END`. */
 #define CR_IMPL(name) bool name::_cr_implementation() \
 { \
 	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_IMPL"); \
-	{ \
-		if(m_coroutine_ip) \
-			CR_RESTORE; \
-		CR_CHECKPOINT; \
-	}
+	LIBCR_HELPER_INTRO;
 
 /** @def CR_PIMPL(name)
 	Starts the external implementation of the given plain coroutine. Must be followed by `#CR_PIMPL_END`. */
 #define CR_PIMPL(name) bool name::_cr_implementation() \
 { \
 	LIBCR_HELPER_ASSERT_PLAIN_SELF("CR_PIMPL"); \
-	{ \
-		if(m_coroutine_ip) \
-			CR_RESTORE; \
-		CR_CHECKPOINT; \
-	}
+	LIBCR_HELPER_INTRO;
 
 /** @def CR_PINLINE
 	Starts the inline implementation of the given plain coroutine. Must be followed by `#CR_PINLINE_END`. */
 #define CR_PINLINE private:bool _cr_implementation() \
 { \
 	LIBCR_HELPER_ASSERT_PLAIN_SELF("CR_PIMPL"); \
-	{ \
-		if(m_coroutine_ip) \
-			CR_RESTORE; \
-		CR_CHECKPOINT; \
-	}
+	LIBCR_HELPER_INTRO;
 
 /** @def CR_PINLINE_END
 	Ends the inline implementation and definition of a plain coroutine declaration. */
@@ -173,8 +167,7 @@
 #define CR_INLINE private:bool _cr_implementation() \
 { \
 	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_INLINE"); \
-	if(m_coroutine_ip) \
-		CR_RESTORE;
+	LIBCR_HELPER_INTRO;
 
 /** @def CR_INLINE_END
 	Ends the inline implementation and definition of a nested coroutine declaration. */
@@ -193,31 +186,33 @@
 #define CR_EXTERNAL_INLINE inline bool _cr_implementation(); \
 };
 
-/** @def COROUTINE(name)
+/** @def COROUTINE(name, inheritance)
 	Creates a nested coroutine with the given name.
-	Nested coroutines are optimised for deeper nesting, and entering into a callstack has constant complexity instead of linear complexity. */
-#define COROUTINE(name) \
-class name : private ::cr::NestCoroutine<name>, ::cr::ExposeNestCoroutineBase \
+	Nested coroutines are optimised for deeper nesting, and entering into a callstack has constant complexity instead of linear complexity.
+	`inheritance` is the inheritance list of the coroutine. */
+#define COROUTINE(name, ...) LIBCR_HELPER_COROUTINE(name, private ::cr::CoroutineHelper<name>, ::cr::ExposeCoroutine, ##__VA_ARGS__)
+#define LIBCR_HELPER_COROUTINE(name, ...) \
+class name : __VA_ARGS__ \
 { \
-	friend class ::cr::NestCoroutine<name>; \
+	friend class ::cr::CoroutineHelper<name>; \
 	typedef name LibCrSelf; \
-	typedef ::cr::NestCoroutine<name> Base; \
-	friend class ExposeNestCoroutineBase; \
-	template<class T, class ...Args> \
-	friend void ::cr::prepare(T &, Args&&...); \
+	typedef ::cr::CoroutineHelper<name> Base; \
+	friend class ExposeCoroutine; \
 public: \
-	using Base::operator();
+	using Coroutine::operator();
 
-/** @def COROUTINE_PLAIN(name)
+/** @def COROUTINE_PLAIN(name, inheritance)
 	Creates a plain coroutine with the given name.
-	Plain coroutines are not optimised for nesting, entering into a callstack has linear complexity. However, plain coroutines have less restrictions on their behaviour, and can be used to have multiple "simultaneous" child coroutines, using `#CR_PCALL_NAKED`. */
-#define COROUTINE_PLAIN(name) \
-class name : protected ::cr::Coroutine<name> \
+	Plain coroutines are not optimised for nesting, entering into a callstack has linear complexity. However, plain coroutines have less restrictions on their behaviour, and can be used to have multiple "simultaneous" child coroutines, using `#CR_PCALL_NAKED`.
+	`inheritance` is the inheritance list of the coroutine. */
+#define COROUTINE_PLAIN(name, ...) LIBCR_HELPER_COROUTINE_PLAIN(name, private ::cr::PlainCoroutineHelper<name>, ##__VA_ARGS__)
+#define LIBCR_HELPER_COROUTINE_PLAIN(name, ...) \
+class name : __VA_ARGS__ \
 { \
-	friend class ::cr::Coroutine<name>; \
+	friend class ::cr::PlainCoroutineHelper<name>; \
 	typedef name LibCrSelf; \
 public: \
-	using ::cr::Coroutine<name>::operator();
+	using ::cr::PlainCoroutineHelper<name>::operator();
 
 
 /** @def CR_STATE

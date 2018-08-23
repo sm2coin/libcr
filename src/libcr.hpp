@@ -26,29 +26,20 @@ namespace cr
 	typedef bool (*impl_t)(void * self);
 
 	/** Basic coroutine state. */
-	class CoroutineBase
+	class PlainCoroutine
 	{
 	public:
 #ifdef LIBCR_DEBUG
 		/** Used when debugging, to check whether the coroutine was initialised. */
-		std::size_t m_magic_number;
+		std::size_t libcr_magic_number;
 #endif
-		/** The coroutine implementation.
-			Used to enter a coroutine. */
-		impl_t m_coroutine_start;
 		/** Contains the last saved instruction pointer. */
-		ip_t m_coroutine_ip;
+		ip_t libcr_coroutine_ip;
 
 		/** Prepares the coroutine for execution.
 		@param[in] coroutine_start:
 			The coroutine start instruction pointer. */
-		void prepare(
-			impl_t coroutine_start);
-
-		/** Calls the coroutine.
-		@return
-			Whether the coroutine is done. */
-		inline bool operator()();
+		void prepare();
 	};
 
 	template<class DerivedCoroutine>
@@ -56,12 +47,8 @@ namespace cr
 		Plain coroutines are not optimised for nesting, entering into a callstack has linear complexity. However, plain coroutines have less restrictions on their behaviour, and can be used to have multiple "simultaneous" child coroutines, using `#CR_PCALL_NAKED`.
 	@tparam DerivedCoroutine:
 		The coroutine type that derives from this type. */
-	class Coroutine : protected CoroutineBase
+	class PlainCoroutineHelper : protected PlainCoroutine
 	{
-	protected:
-		/** Prepares the coroutine. */
-		inline void prepare();
-
 	public:
 		/** Executes the coroutine.
 		@return
@@ -70,25 +57,53 @@ namespace cr
 	};
 
 	template<class T>
-	class NestCoroutine;
+	class CoroutineHelper;
 
 	/** Base class for nested coroutines.
 		Nested coroutines are optimised for deeper nesting, and entering into a callstack has constant complexity instead of linear complexity. */
-	class NestCoroutineBase : public CoroutineBase
+	class Coroutine : public PlainCoroutine
 	{
 	public:
 		/** The outermost coroutine. */
-		NestCoroutineBase * libcr_root;
+		Coroutine * libcr_root;
 		/** When `is_root()`, points to the deepest nested coroutine, otherwise to the immediate parent coroutine. */
-		NestCoroutineBase * libcr_stack;
+		Coroutine * libcr_stack;
+		/** The coroutine implementation.
+			Used to enter a coroutine. */
+		impl_t libcr_coroutine;
+
+		/** Prepares the coroutine to be the root coroutine. */
+		void prepare(
+			impl_t coroutine);
+
+		/** Prepares the coroutine to be a child coroutine.
+		@param[in] coroutine:
+			The coroutine implementation.
+		@param[in] parent:
+			The parent coroutine. */
+		void prepare(
+			impl_t coroutine,
+			Coroutine * parent);
 
 
 		/** Whether this coroutine is the outermost coroutine. */
 		inline bool is_root() const;
+		/** Whether this coroutine is the innermost coroutine. */
+		inline bool is_child() const;
+
+		/** Calls the coroutine.
+		@return
+			Whether the coroutine is done. */
+		inline bool operator()();
+
+		/** Directly calls the coroutine, but the coroutine must be the child coroutine.
+		@return
+			Whether the coroutine is done. */
+		inline bool directly_call_child();
 	};
 
 	/** Helper class that exposes the nested coroutine base to other nested coroutines. */
-	class ExposeNestCoroutineBase
+	class ExposeCoroutine
 	{
 		template<class T>
 		friend class NestCoroutine;
@@ -96,43 +111,45 @@ namespace cr
 		template<
 			class T,
 			class = typename std::enable_if<
-				std::is_base_of<NestCoroutineBase, T>::value
+				std::is_base_of<Coroutine, T>::value
 			>::type>
 		/** Returns the nested coroutine base pointer of a nested coroutine.
 		@param[in] coroutine:
 			The coroutine whose base to expose.
 		@return
 			The coroutine's base. */
-		static constexpr NestCoroutineBase * base(
+		static constexpr Coroutine * base(
 			T * coroutine);
+
+		template<
+			class T,
+			class = typename std::enable_if<
+				std::is_base_of<Coroutine, T>::value
+			>::type>
+		/** Directly calls the child coroutine.
+		@return
+			Whether the coroutine is done. */
+		inline bool directly_call_child(
+			T &coroutine);
 	};
 
 	template<class DerivedCoroutine>
 	/** Helper type for initialising and calling nested coroutines.
 	@tparam DerivedCoroutine:
 		The deriving type. */
-	class NestCoroutine : public NestCoroutineBase
+	class CoroutineHelper : public Coroutine
 	{
 		friend DerivedCoroutine;
 	public:
-		/** Prepares the coroutine to be the root coroutine. */
+		/** Prepares the coroutine as the root coroutine. */
 		inline void prepare();
-
-		/** Prepares the coroutine to be a child coroutine.
-		@param[in] root:
-			The root coroutine.
+		/** Prepares the coroutine as a child coroutine.
 		@param[in] parent:
 			The parent coroutine. */
 		inline void prepare(
-			NestCoroutineBase * root,
-			NestCoroutineBase * parent);
+			Coroutine * parent);
 
-		/** Executes the coroutine.
-		@return
-			Whether the coroutine is donel. */
-		inline bool operator()();
-
-		/** Calls the coroutine of a `#DerivedCoroutine`.
+		/** Calls the coroutine of a `DerivedCoroutine`.
 		@param[in] self:
 			The coroutine state to execute.
 		@return

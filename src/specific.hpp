@@ -10,11 +10,11 @@
 #ifdef __GNUC__
 
 #define LIBCR_HELPER_SAVE(id) do { \
-	m_coroutine_ip = &&LIBCR_HELPER_LABEL(id); \
+	PlainCoroutine::libcr_coroutine_ip = &&LIBCR_HELPER_LABEL(id); \
 } while(0)
 
 #define CR_RESTORE do { \
-	goto *m_coroutine_ip; \
+	goto *PlainCoroutine::libcr_coroutine_ip; \
 } while(0)
 
 #else
