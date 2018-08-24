@@ -14,6 +14,7 @@
 
 namespace cr
 {
+	class Coroutine;
 	/** Instruction pointer type.
 		This is used to save the execution of a coroutine. */
 	typedef void *ip_t;
@@ -23,7 +24,7 @@ namespace cr
 		The coroutine state to execute.
 	@return
 		Whether the coroutine is done. */
-	typedef bool (*impl_t)(void * self);
+	typedef bool (Coroutine::*impl_t)();
 
 	/** Basic coroutine state. */
 	class PlainCoroutine
@@ -148,14 +149,6 @@ namespace cr
 			The parent coroutine. */
 		inline void prepare(
 			Coroutine * parent);
-
-		/** Calls the coroutine of a `DerivedCoroutine`.
-		@param[in] self:
-			The coroutine state to execute.
-		@return
-			Whether the coroutine is done. */
-		static bool lambda(
-			void * self);
 	};
 }
 

@@ -8,7 +8,7 @@
 Libcr is a bare-bones **stack-less** coroutine implementation, extremely lightweight and efficient, with no fancy features. However, it is well suited to use as a base to create more powerful coroutine primitives. Currently, libcr features the following:
  * Plain coroutines: with only one pointer as state, these coroutines are extremely low in overhead.
  * Nest-coroutines: with 4 pointers as state, these coroutines allow constant-complexity (O(1)) resuming of coroutines of arbitrary nesting depth.
- * Extreme efficiency: Saving a coroutine's context only requires updating a single pointer. Likewise, the resuming of a coroutine's execution only requires reading that pointer.
+ * Extreme efficiency: Saving a coroutine's context only requires updating a single pointer. Likewise, the resuming of a coroutine's execution only requires reading that pointer, and making a call.
  * All coroutines are POD types per default, allowing them to be put into `union` types for better memory usage.
  * Primitives:
  	* A blocking await primitive (`#CR_CALL`), that allows waiting for a child coroutine to finish.

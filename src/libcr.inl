@@ -24,7 +24,7 @@ namespace cr
 		assert(libcr_magic_number == LIBCR_MAGIC_NUMBER);
 		assert(is_root() && "Only call the root coroutine.");
 
-		return libcr_stack->libcr_coroutine(libcr_stack);
+		return (libcr_stack->*libcr_stack->libcr_coroutine)();
 	}
 
 	bool Coroutine::directly_call_child()
@@ -32,7 +32,7 @@ namespace cr
 		assert(libcr_magic_number == LIBCR_MAGIC_NUMBER);
 		assert(is_child() && "Only call the child coroutine.");
 
-		return libcr_coroutine(this);
+		return (this->*libcr_coroutine)();
 	}
 
 	template<class T, class>
@@ -56,7 +56,7 @@ namespace cr
 	void CoroutineHelper<DerivedCoroutine>::prepare()
 	{
 		Coroutine::prepare(
-			&DerivedCoroutine::lambda);
+			static_cast<impl_t>(&DerivedCoroutine::_cr_implementation));
 	}
 
 	template<class DerivedCoroutine>
@@ -64,14 +64,7 @@ namespace cr
 		Coroutine * parent)
 	{
 		Coroutine::prepare(
-			&DerivedCoroutine::lambda,
+			static_cast<impl_t>(&DerivedCoroutine::_cr_implementation),
 			parent);
-	}
-
-	template<class DerivedCoroutine>
-	bool CoroutineHelper<DerivedCoroutine>::lambda(
-		void * self)
-	{
-		return static_cast<DerivedCoroutine *>(self)->_cr_implementation();
 	}
 }

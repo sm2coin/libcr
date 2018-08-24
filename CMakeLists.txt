@@ -9,7 +9,7 @@ file(GLOB_RECURSE libcr_sources ./src/*.cpp)
 file(GLOB_RECURSE libcr_headers ./src/*.hpp ./src/*.inl)
 
 # Add them to the project.
-add_library(libcr ${libcr_sources} ${libcr_headers})
+add_library(libcr STATIC ${libcr_sources} ${libcr_headers})
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/src/ DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include/libcr/ FILES_MATCHING PATTERN "*.hpp" PATTERN "*.inl")
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include/libcr/)
