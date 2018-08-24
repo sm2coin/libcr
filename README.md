@@ -3,6 +3,22 @@
 > Coroutine library draft.
 > libcr is intended to create minimal overhead coroutines with basic functionality.
 
+## Features
+
+Libcr is a bare-bones **stack-less** coroutine implementation, extremely lightweight and efficient, with no fancy features. However, it is well suited to use as a base to create more powerful coroutine primitives. Currently, libcr features the following:
+ * Plain coroutines: with only one pointer as state, these coroutines are extremely low in overhead.
+ * Nest-coroutines: with 4 pointers as state, these coroutines allow constant-complexity (O(1)) resuming of coroutines of arbitrary nesting depth.
+ * Extreme efficiency: Saving a coroutine's context only requires updating a single pointer. Likewise, the resuming of a coroutine's execution only requires reading that pointer.
+ * All coroutines are POD types per default, allowing them to be put into `union` types for better memory usage.
+ * Primitives:
+ 	* A blocking await primitive (`#CR_CALL`), that allows waiting for a child coroutine to finish.
+ 	* A yield primitive (`#CR_YIELD`), that allows yielding the coroutine execution.
+ 	* A return primitive (`#CR_RETURN`), that ends the coroutine.
+ 	* A checkpoint primitive (`#CR_CHECKPOINT`) that saves the coroutine execution state for the next time it is resumed.
+ * Clean, easy to understand syntax.
+ * No external libraries or kernel functions are used.
+
+
 ## Compiling
 
 You need to have `CMake` installed. Navigate to the `libcr` directory, and execute:
