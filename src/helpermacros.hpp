@@ -3,6 +3,12 @@
 #ifndef __libcr_helpermacros_hpp_defined
 #define __libcr_helpermacros_hpp_defined
 
+
+/** @def LIBCR_DEBUG
+	Define this prior to including libcr to activate debugging. */
+/** @def LIBCR_RELEASE
+	Define this prior to including libcr to deactivate debugging. */
+
 #ifdef LIBCR_RELEASE
 #ifdef LIBCR_DEBUG
 #error Cannot have LIBCR_RELEASE and LIBCR_DEBUG defined at the same time.
@@ -26,6 +32,10 @@
 #ifndef NDEBUG
 #ifndef LIBCR_DEBUG
 #define LIBCR_DEBUG
+#endif
+#else
+#ifndef LIBCR_RELEASE
+#define LIBCR_RELEASE
 #endif
 #endif
 
@@ -56,6 +66,7 @@
 #define LIBCR_HELPER_ASSERT_PLAIN_SELF(name) LIBCR_HELPER_ASSERT_PLAIN(name, LibCrSelf)
 #define LIBCR_HELPER_ASSERT_NESTED_SELF(name) LIBCR_HELPER_ASSERT_NESTED(name, LibCrSelf)
 
+#define LIBCR_HELPER_UNPACK(...) __VA_ARGS__
 
 #define LIBCR_HELPER_PREPARE(obj, ...) (obj).prepare(__VA_ARGS__)
 

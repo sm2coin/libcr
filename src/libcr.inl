@@ -6,7 +6,7 @@ namespace cr
 	{
 		assert(libcr_magic_number == LIBCR_MAGIC_NUMBER);
 
-		return DerivedCoroutine::_cr_implementation();
+		return static_cast<DerivedCoroutine *>(this)->_cr_implementation();
 	}
 
 	bool Coroutine::is_root() const

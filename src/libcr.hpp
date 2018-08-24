@@ -36,9 +36,7 @@ namespace cr
 		/** Contains the last saved instruction pointer. */
 		ip_t libcr_coroutine_ip;
 
-		/** Prepares the coroutine for execution.
-		@param[in] coroutine_start:
-			The coroutine start instruction pointer. */
+		/** Prepares the coroutine for execution. */
 		void prepare();
 	};
 
@@ -72,7 +70,9 @@ namespace cr
 			Used to enter a coroutine. */
 		impl_t libcr_coroutine;
 
-		/** Prepares the coroutine to be the root coroutine. */
+		/** Prepares the coroutine to be the root coroutine.
+		@param[in] coroutine:
+			The coroutine implementation. */
 		void prepare(
 			impl_t coroutine);
 
