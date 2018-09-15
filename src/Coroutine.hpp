@@ -1,30 +1,24 @@
 /** @file libcr.hpp
 	The main header of the library. */
-#ifndef __coroutines_coroutines_hpp_defined
-#define __coroutines_coroutines_hpp_defined
+#ifndef __libcr_coroutine_hpp_defined
+#define __libcr_coroutine_hpp_defined
 
 #include "primitives.hpp"
 
 #include <cstddef>
 #include <utility>
 
+#ifdef LIBCR_DEBUG
 /** @def LIBCR_MAGIC_NUMBER
 	A random number that is used to check whether a coroutine was properly initialised. */
 #define LIBCR_MAGIC_NUMBER 0x38eee375b1b29314
+#endif
 
 namespace cr
 {
-	class Coroutine;
 	/** Instruction pointer type.
 		This is used to save the execution of a coroutine. */
 	typedef void *ip_t;
-	/** Coroutine implementation pointer type.
-		This is used to call coroutines of unknown type.
-	@param[in] self:
-		The coroutine state to execute.
-	@return
-		Whether the coroutine is done. */
-	typedef bool (Coroutine::*impl_t)();
 
 	/** Basic coroutine state. */
 	class PlainCoroutine
@@ -63,6 +57,14 @@ namespace cr
 	class Coroutine : public PlainCoroutine
 	{
 	public:
+		/** Coroutine implementation pointer type.
+			This is used to call coroutines of unknown deriving type.
+		@param[in] self:
+			The coroutine state to execute.
+		@return
+			Whether the coroutine is done. */
+		typedef bool (Coroutine::*impl_t)();
+
 		/** The outermost coroutine. */
 		Coroutine * libcr_root;
 		/** When `is_root()`, points to the deepest nested coroutine, otherwise to the immediate parent coroutine. */
@@ -70,6 +72,9 @@ namespace cr
 		/** The coroutine implementation.
 			Used to enter a coroutine. */
 		impl_t libcr_coroutine;
+
+		/** When waiting for a resource, the next coroutine in line, or self if last. */
+		Coroutine * libcr_next_waiting;
 
 		/** Prepares the coroutine to be the root coroutine.
 		@param[in] coroutine:
@@ -107,7 +112,7 @@ namespace cr
 	class ExposeCoroutine
 	{
 		template<class T>
-		friend class NestCoroutine;
+		friend class CoroutineHelper;
 	protected:
 		template<
 			class T,
@@ -130,7 +135,7 @@ namespace cr
 		/** Directly calls the child coroutine.
 		@return
 			Whether the coroutine is done. */
-		inline bool directly_call_child(
+		static inline bool directly_call_child(
 			T &coroutine);
 	};
 
@@ -152,6 +157,6 @@ namespace cr
 	};
 }
 
-#include "libcr.inl"
+#include "Coroutine.inl"
 
 #endif

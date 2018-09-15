@@ -14,6 +14,7 @@ Libcr is a bare-bones **stack-less** coroutine implementation, extremely lightwe
  	* A blocking await primitive (`#CR_CALL`), that allows waiting for a child coroutine to finish.
  	* A yield primitive (`#CR_YIELD`), that allows yielding the coroutine execution.
  	* A return primitive (`#CR_RETURN`), that ends the coroutine.
+ 	* A blocking wait primitive (`#CR_AWAIT`), that can be used to wait for blocking operations.
  	* A checkpoint primitive (`#CR_CHECKPOINT`) that saves the coroutine execution state for the next time it is resumed.
  * Clean, easy to understand syntax.
  * No external libraries or kernel functions are used.

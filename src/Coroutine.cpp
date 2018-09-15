@@ -1,4 +1,5 @@
-#include "libcr.hpp"
+#include "Coroutine.hpp"
+#include "MailBox.hpp"
 
 namespace cr
 {
@@ -17,6 +18,7 @@ namespace cr
 		libcr_root = this;
 		libcr_stack = this;
 		libcr_coroutine = coroutine;
+		libcr_next_waiting = nullptr;
 	}
 
 	void Coroutine::prepare(

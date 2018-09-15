@@ -23,6 +23,19 @@
 	LIBCR_HELPER_LABEL(id):; \
 } while(0)
 
+/** @def CR_AWAIT(operation)
+	If `operation` returns false, blocks until the coroutine is notified.
+	Only works with nest coroutines. */
+#define CR_AWAIT(operation) do { \
+	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_AWAIT"); \
+	if(!(operation)) \
+	{ \
+		do { \
+			CR_YIELD; \
+		} while(::cr::Coroutine::libcr_next_waiting); \
+	} \
+} while(0)
+
 /** @def CR_RETURN
 	Returns from a nested coroutine to the caller or its parent coroutine. Marks the coroutine as "done", and the coroutine must not be called again. */
 #define CR_RETURN do { \
@@ -209,6 +222,7 @@
 class name : __VA_ARGS__ \
 { \
 	friend class ::cr::CoroutineHelper<name LIBCR_HELPER_UNPACK templates>; \
+	friend class ::cr::MailBoxBase<name LIBCR_HELPER_UNPACK templates>; \
 	typedef name LIBCR_HELPER_UNPACK templates LibCrSelf; \
 	typedef ::cr::CoroutineHelper<name LIBCR_HELPER_UNPACK templates> LibCrBase; \
 	friend class ::cr::ExposeCoroutine; \
@@ -234,6 +248,7 @@ public: \
 class name : __VA_ARGS__ \
 { \
 	friend class ::cr::PlainCoroutineHelper<name LIBCR_HELPER_UNPACK templates>; \
+	friend class ::cr::MailBoxBase<name LIBCR_HELPER_UNPACK templates>; \
 	typedef name LIBCR_HELPER_UNPACK templates LibCrSelf; \
 	typedef ::cr::PlainCoroutineHelper<name LIBCR_HELPER_UNPACK templates> LibCrBase; \
 public: \
