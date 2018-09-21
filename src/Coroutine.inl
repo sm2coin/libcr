@@ -35,6 +35,26 @@ namespace cr
 		return (this->*libcr_coroutine)();
 	}
 
+	template<class T>
+	bool Coroutine::libcr_wait(
+		T & value)
+	{
+		return value.wait(this);
+	}
+
+	template<class T>
+	bool Coroutine::libcr_wait(
+		T && value)
+	{
+		return value.wait(this);
+	}
+
+	bool Coroutine::libcr_wait(
+		bool value)
+	{
+		return value;
+	}
+
 	template<class T, class>
 	constexpr Coroutine * ExposeCoroutine::base(
 		T * coroutine)

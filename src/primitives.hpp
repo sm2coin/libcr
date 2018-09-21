@@ -24,11 +24,11 @@
 } while(0)
 
 /** @def CR_AWAIT(operation)
-	If `operation` returns false, blocks until the coroutine is notified.
+	If `operation` is a boolean, and is `false`, blocks until `operation` is done. Otherwise, calls `operation.wait(this)`, and again, blocks if it returns `false`.
 	Only works with nest coroutines. */
 #define CR_AWAIT(operation) do { \
 	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_AWAIT"); \
-	if(!(operation)) \
+	if(!::cr::Coroutine::libcr_wait(operation)) \
 	{ \
 		do { \
 			CR_YIELD; \

@@ -1,3 +1,5 @@
+/** @file Mutex.hpp
+	Contains the mutex class. */
 #ifndef __libcr_sync_mutex_hpp_defined
 #define __libcr_sync_mutex_hpp_defined
 
@@ -24,6 +26,31 @@ namespace cr::sync
 			Whether the lock was acquired. */
 		bool lock(
 			Coroutine * self);
+
+		/** Helper type that simplifies usage of `lock()` with `#CR_AWAIT`. */
+		class LockCall
+		{
+			/** The mutex to lock. */
+			PODMutex &m_mutex;
+		public:
+			/** Creates a lock call.
+			@param[in] mutex:
+				The mutex to lock. */
+			constexpr LockCall(
+				PODMutex &mutex);
+
+			/** Locks the mutex.
+			@param[in] self:
+				The coroutine locking the mutex.
+			@return
+				Whether the mutex was successfully locked. */
+			inline bool wait(
+				Coroutine * self);
+		};
+
+		/** Locks the mutex.
+			If fails, blocks the coroutine until it acquires the lock. To be used with `#CR_AWAIT`. */
+		constexpr LockCall lock();
 
 		/** Tries to lock the mutex.
 			Never blocks the coroutine.

@@ -1,3 +1,5 @@
+/** @file ConditionVariable.hpp
+	Contains the condition variable class. */
 #ifndef __libcr_sync_conditionvariable_hpp_defined
 #define __libcr_sync_conditionvariable_hpp_defined
 
@@ -32,10 +34,12 @@ namespace cr::sync
 		/** Returns the first coroutine in the waiting list. */
 		inline Coroutine * front();
 
-		/** Notifies the first waiting coroutine, if exists. */
+		/** Notifies the first waiting coroutine, if exists.
+			Removes the notified coroutine from the waiting queue. */
 		void notify_one();
 
-		/** Notifies all waiting coroutines. */
+		/** Notifies all waiting coroutines.
+			Only notifies and removes coroutines that were waiting before the call, not those added during the call. */
 		void notify_all();
 	};
 
@@ -43,6 +47,7 @@ namespace cr::sync
 	class ConditionVariable : PODConditionVariable
 	{
 	public:
+		/** Initialises the condition variable. */
 		ConditionVariable();
 
 		using PODConditionVariable::empty;
@@ -85,6 +90,7 @@ namespace cr::sync
 	class SingleConditionVariable : PODSingleConditionVariable
 	{
 	public:
+		/** Initialises the condition variable. */
 		SingleConditionVariable();
 
 		using PODSingleConditionVariable::empty;

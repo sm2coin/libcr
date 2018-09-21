@@ -1,5 +1,6 @@
 #include "Mutex.hpp"
 #include "../Coroutine.hpp"
+#include "Promise.hpp"
 
 namespace cr::sync
 {

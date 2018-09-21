@@ -1,5 +1,4 @@
 #include "Coroutine.hpp"
-#include "MailBox.hpp"
 
 namespace cr
 {

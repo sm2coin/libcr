@@ -1,5 +1,5 @@
-/** @file libcr.hpp
-	The main header of the library. */
+/** @file Coroutine.hpp
+	The coroutine header. */
 #ifndef __libcr_coroutine_hpp_defined
 #define __libcr_coroutine_hpp_defined
 
@@ -106,6 +106,32 @@ namespace cr
 		@return
 			Whether the coroutine is done. */
 		inline bool directly_call_child();
+
+		template<class T>
+		/** Waits for an awaitable object.
+		@param[in] value:
+			An awaitable object.
+		@return
+			Whether the coroutine does not need to wait. */
+		inline bool libcr_wait(
+			T & value);
+
+		template<class T>
+		/** Waits for an awaitable object.
+		@param[in] value:
+			An awaitable object.
+		@return
+			Whether the coroutine does not need to wait. */
+		inline bool libcr_wait(
+			T && value);
+
+		/** Waits for an awaitable object.
+		@param[in] value:
+			Whether the coroutine does not need to wait.
+		@return
+			Whether the coroutine does not need to wait. */
+		inline bool libcr_wait(
+			bool value);
 	};
 
 	/** Helper class that exposes the nested coroutine base to other nested coroutines. */
