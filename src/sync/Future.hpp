@@ -10,6 +10,8 @@ namespace cr::sync
 {
 	template<class T, class Event>
 	class PODPromiseBase;
+	template<class T, class Event>
+	class PODPromiseBaseBase;
 
 	template<class Event>
 	/** POD future base class.
@@ -96,6 +98,7 @@ namespace cr::sync
 	class FutureBase<void, Event> : PODFutureBase<void, Event>
 	{
 		friend class PODPromiseBase<void, Event>;
+		friend class PODPromiseBaseBase<void, Event>;
 	public:
 		/** Initialises the future to an unfulfilled state. */
 		FutureBase();
@@ -112,6 +115,7 @@ namespace cr::sync
 	class FutureBase : PODFutureBase<T, Event>
 	{
 		friend class PODPromiseBase<T, Event>;
+		friend class PODPromiseBaseBase<T, Event>;
 	public:
 		/** Initialises the future to an unfulfilled state. */
 		FutureBase();

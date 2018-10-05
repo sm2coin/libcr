@@ -12,12 +12,6 @@ namespace cr::sync
 	{
 	}
 
-	bool PODMutex::LockCall::wait(
-		Coroutine * self)
-	{
-		return m_mutex.lock(self);
-	}
-
 	constexpr PODMutex::LockCall PODMutex::lock()
 	{
 		return LockCall(*this);

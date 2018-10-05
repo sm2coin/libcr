@@ -13,8 +13,15 @@ namespace cr::sync
 		PODFutureBase<T, Event> * future)
 	{
 		assert(future != nullptr);
-		assert(!future->waiting());
+		assert(!future->listeners());
 		m_future = future;
+	}
+
+	template<class T, class Event>
+	void PODPromiseBaseBase<T, Event>::initialise(
+		FutureBase<T, Event> * future)
+	{
+		initialise(static_cast<PODFutureBase<T, Event> *>(future));
 	}
 
 	template<class Event>
@@ -52,6 +59,13 @@ namespace cr::sync
 	template<class T, class Event>
 	PromiseBase<T, Event>::PromiseBase(
 		PODFutureBase<T, Event> * future)
+	{
+		PODPromiseBase<T, Event>::initialise(future);
+	}
+
+	template<class T, class Event>
+	PromiseBase<T, Event>::PromiseBase(
+		FutureBase<T, Event> * future)
 	{
 		PODPromiseBase<T, Event>::initialise(future);
 	}

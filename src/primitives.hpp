@@ -6,6 +6,8 @@
 #include "helpermacros.hpp"
 #include "specific.hpp"
 
+#include "sync/Block.hpp"
+
 /** @def CR_CHECKPOINT
 	Saves the execution for restoring it later. */
 #define CR_CHECKPOINT LIBCR_HELPER_CHECKPOINT(__COUNTER__)
@@ -24,11 +26,11 @@
 } while(0)
 
 /** @def CR_AWAIT(operation)
-	If `operation` is a boolean, and is `false`, blocks until `operation` is done. Otherwise, calls `operation.wait(this)`, and again, blocks if it returns `false`.
+	If `operation` is blocking, yields the coroutine until the operation finished.
 	Only works with nest coroutines. */
 #define CR_AWAIT(operation) do { \
 	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_AWAIT"); \
-	if(!::cr::Coroutine::libcr_wait(operation)) \
+	if(::cr::sync::block() == ::cr::Coroutine::libcr_wait(operation)) \
 	{ \
 		do { \
 			CR_YIELD; \
@@ -222,7 +224,6 @@
 class name : __VA_ARGS__ \
 { \
 	friend class ::cr::CoroutineHelper<name LIBCR_HELPER_UNPACK templates>; \
-	friend class ::cr::MailBoxBase<name LIBCR_HELPER_UNPACK templates>; \
 	typedef name LIBCR_HELPER_UNPACK templates LibCrSelf; \
 	typedef ::cr::CoroutineHelper<name LIBCR_HELPER_UNPACK templates> LibCrBase; \
 	friend class ::cr::ExposeCoroutine; \

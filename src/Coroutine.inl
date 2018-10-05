@@ -39,14 +39,14 @@ namespace cr
 	bool Coroutine::libcr_wait(
 		T & value)
 	{
-		return value.wait(this);
+		return value.libcr_wait(this);
 	}
 
 	template<class T>
 	bool Coroutine::libcr_wait(
 		T && value)
 	{
-		return value.wait(this);
+		return value.libcr_wait(this);
 	}
 
 	bool Coroutine::libcr_wait(

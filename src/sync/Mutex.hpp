@@ -18,15 +18,6 @@ namespace cr::sync
 		/** Initialises the mutex. */
 		void initialise();
 
-		/** Locks the mutex.
-			If fails, blocks the coroutine until it acquires the lock. To be used with `#CR_AWAIT`.
-		@param[in] self:
-			The coroutine trying to acquire the mutex.
-		@return
-			Whether the lock was acquired. */
-		bool lock(
-			Coroutine * self);
-
 		/** Helper type that simplifies usage of `lock()` with `#CR_AWAIT`. */
 		class LockCall
 		{
@@ -44,13 +35,13 @@ namespace cr::sync
 				The coroutine locking the mutex.
 			@return
 				Whether the mutex was successfully locked. */
-			inline bool wait(
+			mayblock libcr_wait(
 				Coroutine * self);
 		};
 
 		/** Locks the mutex.
-			If fails, blocks the coroutine until it acquires the lock. To be used with `#CR_AWAIT`. */
-		constexpr LockCall lock();
+			To be used with `#CR_AWAIT`. */
+		[[nodiscard]] constexpr LockCall lock();
 
 		/** Tries to lock the mutex.
 			Never blocks the coroutine.

@@ -29,16 +29,30 @@ namespace cr::sync
 	}
 
 	template<class ConditionVariable>
-	bool PODEventBase<ConditionVariable>::wait(
+	constexpr PODEventBase<ConditionVariable>::WaitCall::WaitCall(
+		PODEventBase<ConditionVariable> &event):
+		m_event(event)
+	{
+	}
+
+	template<class ConditionVariable>
+	mayblock PODEventBase<ConditionVariable>::WaitCall::libcr_wait(
 		Coroutine * coroutine)
 	{
-		if(m_happened)
-			return true;
+		if(m_event.m_happened)
+			return nonblock();
 		else
 		{
-			m_cv.wait(coroutine);
-			return false;
+			return m_event.m_cv.wait().libcr_wait(coroutine);
 		}
+	}
+
+	template<class ConditionVariable>
+	constexpr
+		typename PODEventBase<ConditionVariable>::WaitCall
+		PODEventBase<ConditionVariable>::wait()
+	{
+		return WaitCall(*this);
 	}
 
 	template<class ConditionVariable>

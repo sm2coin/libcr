@@ -9,7 +9,7 @@ namespace cr::sync
 		m_last_waiting = nullptr;
 	}
 
-	void PODConditionVariable::wait(
+	block PODConditionVariable::WaitCall::libcr_wait(
 		Coroutine * coroutine)
 	{
 		assert(coroutine != nullptr);
@@ -17,18 +17,19 @@ namespace cr::sync
 
 		coroutine->libcr_next_waiting = coroutine;
 
-		if(!m_first_waiting)
+		if(!m_cv.m_first_waiting)
 		{
-			m_first_waiting = coroutine;
-			m_last_waiting = coroutine;
+			m_cv.m_first_waiting = coroutine;
+			m_cv.m_last_waiting = coroutine;
 		} else
 		{
-			assert(m_last_waiting->libcr_next_waiting == m_last_waiting);
+			assert(m_cv.m_last_waiting->libcr_next_waiting == m_cv.m_last_waiting);
 
-			m_last_waiting->libcr_next_waiting = coroutine;
-			m_last_waiting = coroutine;
+			m_cv.m_last_waiting->libcr_next_waiting = coroutine;
+			m_cv.m_last_waiting = coroutine;
 		}
 
+		return block();
 	}
 
 	void PODConditionVariable::notify_one()
@@ -83,14 +84,18 @@ namespace cr::sync
 		m_waiting = nullptr;
 	}
 
-	void PODSingleConditionVariable::wait(
+	block PODSingleConditionVariable::WaitCall::libcr_wait(
 		Coroutine * coroutine)
 	{
-		assert(m_waiting == nullptr);
+		assert(coroutine != nullptr);
 		assert(coroutine->libcr_next_waiting == nullptr);
 
-		m_waiting = coroutine;
+		assert(m_cv.m_waiting == nullptr);
+
+		m_cv.m_waiting = coroutine;
 		coroutine->libcr_next_waiting = coroutine;
+
+		return block();
 	}
 
 	void PODSingleConditionVariable::notify_one()
@@ -108,7 +113,6 @@ namespace cr::sync
 	{
 		notify_one();
 	}
-
 
 	SingleConditionVariable::SingleConditionVariable()
 	{

@@ -15,22 +15,21 @@ namespace cr::sync
 		m_count = count;
 	}
 
-	bool PODBarrier::wait(
+	mayblock PODBarrier::WaitCall::libcr_wait(
 		Coroutine * coroutine)
 	{
-		if(m_count)
+		if(m_barrier.m_count)
 		{
-			if(!--m_count)
+			if(!--m_barrier.m_count)
 			{
-				m_cv.notify_all();
-				return true;
+				m_barrier.m_cv.notify_all();
+				return nonblock();
 			} else
 			{
-				m_cv.wait(coroutine);
-				return false;
+				return m_barrier.m_cv.wait().libcr_wait(coroutine);
 			}
 		} else
-			return true;
+			return nonblock();
 	}
 
 	Barrier::Barrier()

@@ -27,6 +27,11 @@ namespace cr::sync
 			The future to use with this promise. */
 		void initialise(
 			PODFutureBase<T, Event> * future);
+		/** Initialises the promise to be bound to the given future.
+		@param[in] future:
+			The future to use with this promise. */
+		inline void initialise(
+			FutureBase<T, Event> * future);
 	};
 
 	template<class T, class Event>
@@ -90,6 +95,11 @@ namespace cr::sync
 			The future to use with this promise. */
 		PromiseBase(
 			PODFutureBase<T, Event> * future);
+		/** Initialises the promise to be bound to the given future.
+		@param[in] future:
+			The future to use with this promise. */
+		PromiseBase(
+			FutureBase<T, Event> * future);
 	};
 
 	template<class T>

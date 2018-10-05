@@ -4,6 +4,7 @@
 #define __libcr_sync_barrier_hpp_defined
 
 #include "ConditionVariable.hpp"
+#include "Block.hpp"
 
 #include <cstddef>
 
@@ -25,12 +26,30 @@ namespace cr::sync
 		void initialise(
 			std::size_t count);
 
+		/** Helper class for waiting for a barrier using `#CR_AWAIT`. */
+		class WaitCall
+		{
+			/** The barrier to wait for. */
+			PODBarrier & m_barrier;
+		public:
+			/** Initialises the wait call.
+			@param[in] barrier:
+				The barrier to wait for. */
+			constexpr WaitCall(
+				PODBarrier & barrier);
+
+			/** Waits for the barrier.
+			@param[in] coroutine:
+				The coroutine to wait.
+			@return
+				Whether the operation blocks. */
+			mayblock libcr_wait(
+				Coroutine * coroutine);
+		};
+
 		/** Waits for the barrier.
-			Blocks all coroutines until the configured amount of coroutines are waiting. To be used with `#CR_AWAIT`.
-		@param[in] coroutine:
-			The coroutine waiting for the barrier. */
-		bool wait(
-			Coroutine * coroutine);
+			Blocks all coroutines until the configured amount of coroutines are waiting. To be used with `#CR_AWAIT`. */
+		[[nodiscard]] constexpr WaitCall wait();
 	};
 
 	/** Barrier type. */
@@ -48,5 +67,7 @@ namespace cr::sync
 		using PODBarrier::wait;
 	};
 }
+
+#include "Barrier.inl"
 
 #endif

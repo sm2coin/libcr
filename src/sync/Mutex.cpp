@@ -4,17 +4,16 @@
 
 namespace cr::sync
 {
-	bool PODMutex::lock(
+	mayblock PODMutex::LockCall::libcr_wait(
 		Coroutine * self)
 	{
-		if(!m_owner)
+		if(!m_mutex.m_owner)
 		{
-			m_owner = self;
-			return true;
+			m_mutex.m_owner = self;
+			return nonblock();
 		} else
 		{
-			m_cv.wait(self);
-			return false;
+			return m_mutex.m_cv.wait().libcr_wait(self);
 		}
 	}
 

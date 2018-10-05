@@ -4,6 +4,7 @@
 #define __libcr_sync_event_hpp_defined
 
 #include "ConditionVariable.hpp"
+#include "Block.hpp"
 
 namespace cr::sync
 {
@@ -32,14 +33,31 @@ namespace cr::sync
 			The event must have happened already. */
 		void clear();
 
+		/** Helper class for waiting for an event using `#CR_AWAIT`. */
+		class WaitCall
+		{
+			/** The event to wait for. */
+			PODEventBase<ConditionVariable> &m_event;
+		public:
+			/** Initialises the wait call.
+			@param[in] event:
+				The event to wait for. */
+			constexpr WaitCall(
+				PODEventBase<ConditionVariable> &event);
+
+			/** Waits for the event.
+				Blocks if the event did not happen yet.
+			@param[in] coroutine:
+				The coroutine to wait for the event.
+			@return
+				Whether the call blocks. */
+			mayblock libcr_wait(
+				Coroutine * coroutine);
+		};
+
 		/** Waits until the event happens.
-			If has not yet happened, blocks the coroutine until the event happens. To be used with `#CR_AWAIT`.
-		@param[in] coroutine:
-			The coroutine that waits for the event.
-		@return
-			Whether the event already happened. */
-		bool wait(
-			Coroutine * coroutine);
+			If has not yet happened, blocks the coroutine until the event happens. To be used with `#CR_AWAIT`. */
+		[[nodiscard]] constexpr WaitCall wait();
 
 		/** Whether the event happened. */
 		inline bool happened() const;

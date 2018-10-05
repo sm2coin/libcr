@@ -3,6 +3,8 @@
 #ifndef __libcr_sync_conditionvariable_hpp_defined
 #define __libcr_sync_conditionvariable_hpp_defined
 
+#include "Block.hpp"
+
 namespace cr
 {
 	class Coroutine;
@@ -10,7 +12,7 @@ namespace cr
 
 namespace cr::sync
 {
-	/** POD condition variable that can be waited on by an arbitrary number of coroutines. */
+	/** POD condition variable that can be waited for by an arbitrary number of coroutines. */
 	class PODConditionVariable
 	{
 		/** The first coroutine waiting. */
@@ -23,13 +25,31 @@ namespace cr::sync
 		void initialise();
 
 		/** Whether the waiting list is empty. */
-		inline bool empty();
+		inline bool empty() const;
 
-		/** Adds a coroutine to the queue.
-		@param[in] coroutine:
-			The coroutine to add to the waiting queue. */
-		void wait(
-			Coroutine * coroutine);
+		/** Helper class for waiting for a condition variable using `#CR_AWAIT`. */
+		class WaitCall
+		{
+			/** The condition variable to wait on. */
+			PODConditionVariable &m_cv;
+		public:
+			/** Initialises the wait call.
+			@param[in] cv:
+				The condition variable to wait on. */
+			constexpr WaitCall(
+				PODConditionVariable &cv);
+
+			/** Adds a coroutine to the queue.
+			@param[in] coroutine:
+				The coroutine to add to the waiting queue.
+			@return
+				Whether the call blocks. */
+			block libcr_wait(
+				Coroutine * coroutine);
+		};
+
+		/** Adds a coroutine to the queue. */
+		[[nodiscard]] constexpr WaitCall wait();
 
 		/** Returns the first coroutine in the waiting list. */
 		inline Coroutine * front();
@@ -43,7 +63,7 @@ namespace cr::sync
 		void notify_all();
 	};
 
-	/** Condition variable that can be waited on by an arbitrary number of coroutines. */
+	/** Condition variable that can be waited for by an arbitrary number of coroutines. */
 	class ConditionVariable : PODConditionVariable
 	{
 	public:
@@ -57,7 +77,7 @@ namespace cr::sync
 		using PODConditionVariable::notify_all;
 	};
 
-	/** POD condition variable that can be waited on by a single coroutine. */
+	/** POD condition variable that can be waited for by a single coroutine. */
 	class PODSingleConditionVariable
 	{
 		/** The waiting coroutine.*/
@@ -67,14 +87,31 @@ namespace cr::sync
 		void initialise();
 
 		/** Whether no coroutine is currently waiting. */
-		inline bool empty();
+		inline bool empty() const;
 
-		/** Enqueues a coroutine for waiting.
-			There must not be a coroutine waiting on this condition variable already.
-		@param[in] coroutine:
-			The coroutine to enqueue. */
-		void wait(
-			Coroutine * coroutine);
+		/** Helper class for waiting for a condition variable using `#CR_AWAIT`. */
+		class WaitCall
+		{
+			/** The condition variable to wait on. */
+			PODSingleConditionVariable &m_cv;
+		public:
+			/** Initialises the wait call.
+			@param[in] cv:
+				The condition variable to wait on. */
+			constexpr WaitCall(
+				PODSingleConditionVariable &cv);
+
+			/** Adds a coroutine to the queue.
+			@param[in] coroutine:
+				The coroutine to add to the waiting queue.
+			@return
+				Whether the call blocks. */
+			block libcr_wait(
+				Coroutine * coroutine);
+		};
+
+		/** Adds a coroutine to the queue. */
+		[[nodiscard]] constexpr WaitCall wait();
 
 		/** The waiting coroutine, or `null`. */
 		Coroutine * front();
@@ -86,7 +123,7 @@ namespace cr::sync
 		void notify_all();
 	};
 
-	/** Condition variable that can be waited on by a single coroutine. */
+	/** Condition variable that can be waited for by a single coroutine. */
 	class SingleConditionVariable : PODSingleConditionVariable
 	{
 	public:
