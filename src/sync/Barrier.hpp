@@ -43,7 +43,7 @@ namespace cr::sync
 				The coroutine to wait.
 			@return
 				Whether the operation blocks. */
-			mayblock libcr_wait(
+			[[nodiscard]] mayblock libcr_wait(
 				Coroutine * coroutine);
 		};
 

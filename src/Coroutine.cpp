@@ -7,7 +7,7 @@ namespace cr
 #ifdef LIBCR_DEBUG
 		libcr_magic_number = LIBCR_MAGIC_NUMBER;
 #endif
-		libcr_coroutine_ip = 0;
+		libcr_coroutine_ip = nullptr;
 	}
 
 	void Coroutine::prepare(
@@ -28,5 +28,6 @@ namespace cr
 		libcr_root = parent->libcr_root;
 		libcr_stack = parent;
 		libcr_coroutine = coroutine;
+		libcr_next_waiting = nullptr;
 	}
 }

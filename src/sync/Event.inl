@@ -66,4 +66,49 @@ namespace cr::sync
 	{
 		PODEventBase<ConditionVariable>::initialise();
 	}
+
+	template<class ConditionVariable>
+	void PODConsumableEventBase<ConditionVariable>::fire()
+	{
+		assert(!m_happened);
+		if(listeners())
+			m_cv.notify_one();
+		else
+			m_happened = true;
+	}
+
+	template<class ConditionVariable>
+	constexpr PODConsumableEventBase<ConditionVariable>::ConsumeCall::ConsumeCall(
+		PODConsumableEventBase<ConditionVariable> &event):
+		m_event(event)
+	{
+	}
+
+	template<class ConditionVariable>
+	mayblock PODConsumableEventBase<ConditionVariable>::ConsumeCall::libcr_wait(
+		Coroutine * coroutine)
+	{
+		if(m_event.m_happened)
+		{
+			m_event.clear();
+			return nonblock();
+		} else
+		{
+			return m_event.m_cv.wait().libcr_wait(coroutine);
+		}
+	}
+
+	template<class ConditionVariable>
+	constexpr
+		typename PODConsumableEventBase<ConditionVariable>::ConsumeCall
+		PODConsumableEventBase<ConditionVariable>::consume()
+	{
+		return ConsumeCall(*this);
+	}
+
+	template<class ConditionVariable>
+	ConsumableEventBase<ConditionVariable>::ConsumableEventBase()
+	{
+		PODConsumableEventBase<ConditionVariable>::initialise();
+	}
 }
