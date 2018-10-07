@@ -30,7 +30,7 @@
 	Only works with nest coroutines. */
 #define CR_AWAIT(operation) do { \
 	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_AWAIT"); \
-	if(::cr::sync::block() == ::cr::Coroutine::libcr_wait(operation)) \
+	if(::cr::sync::block() == ::cr::Coroutine::libcr_unpack_wait(operation)) \
 	{ \
 		do { \
 			CR_YIELD; \

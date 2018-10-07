@@ -36,20 +36,20 @@ namespace cr
 	}
 
 	template<class T>
-	bool Coroutine::libcr_wait(
+	bool Coroutine::libcr_unpack_wait(
 		T & value)
 	{
 		return value.libcr_wait(this);
 	}
 
 	template<class T>
-	bool Coroutine::libcr_wait(
+	bool Coroutine::libcr_unpack_wait(
 		T && value)
 	{
 		return value.libcr_wait(this);
 	}
 
-	bool Coroutine::libcr_wait(
+	bool Coroutine::libcr_unpack_wait(
 		bool value)
 	{
 		return value;

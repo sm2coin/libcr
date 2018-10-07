@@ -113,7 +113,7 @@ namespace cr
 			An awaitable object.
 		@return
 			Whether the coroutine does not need to wait. */
-		inline bool libcr_wait(
+		inline bool libcr_unpack_wait(
 			T & value);
 
 		template<class T>
@@ -122,7 +122,7 @@ namespace cr
 			An awaitable object.
 		@return
 			Whether the coroutine does not need to wait. */
-		inline bool libcr_wait(
+		inline bool libcr_unpack_wait(
 			T && value);
 
 		/** Waits for an awaitable object.
@@ -130,7 +130,7 @@ namespace cr
 			Whether the coroutine does not need to wait.
 		@return
 			Whether the coroutine does not need to wait. */
-		inline bool libcr_wait(
+		inline bool libcr_unpack_wait(
 			bool value);
 	};
 
