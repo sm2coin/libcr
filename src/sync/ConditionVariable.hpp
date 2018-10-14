@@ -114,7 +114,7 @@ namespace cr::sync
 		[[nodiscard]] constexpr WaitCall wait();
 
 		/** The waiting coroutine, or `null`. */
-		Coroutine * front();
+		inline Coroutine * front();
 
 		/** Notifies the waiting coroutine, if exists. */
 		void notify_one();
