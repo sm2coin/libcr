@@ -8,7 +8,8 @@
 #include "Mutex.hpp"
 #include "Promise.hpp"
 
-/** Contains all synchronisation primitives. */
+/** Contains all synchronisation primitives.
+	These primitives are not thread-safe, however. For thread-safe versions, see namespace `cr::mt`. */
 namespace cr::sync
 {
 }
