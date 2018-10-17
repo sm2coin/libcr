@@ -30,12 +30,12 @@ namespace cr::sync
 		/** Helper class for waiting for a condition variable using `#CR_AWAIT`. */
 		class WaitCall
 		{
-			/** The condition variable to wait on. */
+			/** The condition variable to wait for. */
 			PODConditionVariable &m_cv;
 		public:
 			/** Initialises the wait call.
 			@param[in] cv:
-				The condition variable to wait on. */
+				The condition variable to wait for. */
 			constexpr WaitCall(
 				PODConditionVariable &cv);
 
@@ -92,6 +92,7 @@ namespace cr::sync
 		/** Helper class for waiting for a condition variable using `#CR_AWAIT`. */
 		class WaitCall
 		{
+		protected:
 			/** The condition variable to wait on. */
 			PODSingleConditionVariable &m_cv;
 		public:

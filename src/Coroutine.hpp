@@ -5,6 +5,7 @@
 
 #include "primitives.hpp"
 
+#include <atomic>
 #include <cstddef>
 #include <utility>
 
@@ -74,7 +75,7 @@ namespace cr
 		impl_t libcr_coroutine;
 
 		/** When waiting for a resource, the next coroutine in line, or self if last. */
-		Coroutine * libcr_next_waiting;
+		std::atomic<Coroutine *> libcr_next_waiting;
 
 		/** Prepares the coroutine to be the root coroutine.
 		@param[in] coroutine:
@@ -132,6 +133,21 @@ namespace cr
 			Whether the coroutine does not need to wait. */
 		inline bool libcr_unpack_wait(
 			bool value);
+
+
+		/** Whether a coroutine is waiting. */
+		inline bool waiting() const;
+
+		/** The next coroutine waiting, or null. */
+		inline Coroutine * next_waiting() const;
+
+		/** Sets a coroutine to be waiting.
+			The coroutine must not be waiting already. */
+		void pause();
+
+		/** Marks a waiting coroutine as no longer waiting.
+			The coroutine must be waiting. Does not execute the coroutine. */
+		void resume();
 	};
 
 	/** Helper class that exposes the nested coroutine base to other nested coroutines. */

@@ -55,6 +55,20 @@ namespace cr
 		return value;
 	}
 
+	bool Coroutine::waiting() const
+	{
+		return libcr_next_waiting.load(std::memory_order_relaxed);
+	}
+
+	Coroutine * Coroutine::next_waiting() const
+	{
+		Coroutine * next = libcr_next_waiting.load(std::memory_order_relaxed);
+		if(next != this)
+			return next;
+		else
+			return nullptr;
+	}
+
 	template<class T, class>
 	constexpr Coroutine * ExposeCoroutine::base(
 		T * coroutine)

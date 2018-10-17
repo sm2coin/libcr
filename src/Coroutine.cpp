@@ -17,7 +17,7 @@ namespace cr
 		libcr_root = this;
 		libcr_stack = this;
 		libcr_coroutine = coroutine;
-		libcr_next_waiting = nullptr;
+		libcr_next_waiting.store(nullptr, std::memory_order_relaxed);
 	}
 
 	void Coroutine::prepare(
@@ -28,6 +28,18 @@ namespace cr
 		libcr_root = parent->libcr_root;
 		libcr_stack = parent;
 		libcr_coroutine = coroutine;
-		libcr_next_waiting = nullptr;
+		libcr_next_waiting.store(nullptr, std::memory_order_relaxed);
+	}
+
+	void Coroutine::pause()
+	{
+		assert(!waiting());
+		libcr_next_waiting.store(this, std::memory_order_release);
+	}
+
+	void Coroutine::resume()
+	{
+		assert(waiting());
+		libcr_next_waiting.store(nullptr, std::memory_order_acquire);
 	}
 }

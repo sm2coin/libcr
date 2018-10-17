@@ -34,7 +34,7 @@
 	{ \
 		do { \
 			CR_YIELD; \
-		} while(::cr::Coroutine::libcr_next_waiting); \
+		} while(waiting()); \
 	} \
 } while(0)
 

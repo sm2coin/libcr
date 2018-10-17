@@ -13,21 +13,19 @@ namespace cr::sync
 		Coroutine * coroutine)
 	{
 		assert(coroutine != nullptr);
-		assert(coroutine->libcr_next_waiting == nullptr);
+		assert(!coroutine->waiting());
 
-		coroutine->libcr_next_waiting = coroutine;
+		coroutine->pause();
 
 		if(!m_cv.m_first_waiting)
 		{
 			m_cv.m_first_waiting = coroutine;
-			m_cv.m_last_waiting = coroutine;
 		} else
 		{
-			assert(m_cv.m_last_waiting->libcr_next_waiting == m_cv.m_last_waiting);
-
 			m_cv.m_last_waiting->libcr_next_waiting = coroutine;
-			m_cv.m_last_waiting = coroutine;
 		}
+
+		m_cv.m_last_waiting = coroutine;
 
 		return block();
 	}
@@ -37,24 +35,17 @@ namespace cr::sync
 		if(empty())
 			return;
 
-		assert(m_first_waiting->libcr_next_waiting != nullptr);
-
 		Coroutine * first = m_first_waiting;
 
 		if(m_first_waiting == m_last_waiting)
 		{
-			assert(m_first_waiting->libcr_next_waiting == m_first_waiting);
-
-			m_first_waiting->libcr_next_waiting = nullptr;
-			m_first_waiting = nullptr;
+			assert(!m_first_waiting->next_waiting());
 			m_last_waiting = nullptr;
-		} else
-		{
-			Coroutine * second = m_first_waiting->libcr_next_waiting;
-			m_first_waiting->libcr_next_waiting = nullptr;
-			m_first_waiting = second;
 		}
 
+		m_first_waiting = first->next_waiting();
+
+		first->resume();
 		first->directly_call_child();
 	}
 
@@ -88,12 +79,12 @@ namespace cr::sync
 		Coroutine * coroutine)
 	{
 		assert(coroutine != nullptr);
-		assert(coroutine->libcr_next_waiting == nullptr);
+		assert(!coroutine->waiting());
 
 		assert(m_cv.m_waiting == nullptr);
 
 		m_cv.m_waiting = coroutine;
-		coroutine->libcr_next_waiting = coroutine;
+		coroutine->pause();
 
 		return block();
 	}
@@ -102,9 +93,9 @@ namespace cr::sync
 	{
 		if(m_waiting)
 		{
-			Coroutine * first = front();
-			m_waiting->libcr_next_waiting = nullptr;
+			Coroutine * first = m_waiting;
 			m_waiting = nullptr;
+			first->resume();
 			first->directly_call_child();
 		}
 	}
