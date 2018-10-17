@@ -31,14 +31,18 @@ namespace cr::mt
 			assert(last->waiting());
 			assert(!last->next_waiting());
 			last->libcr_next_waiting.store(coroutine, std::memory_order_relaxed);
+		} else
+		{
+			// The condition variable must be empty, so set last as first.
+				Coroutine * first;
+			do {
+				first = nullptr;
+			// If first is not null, the previously only coroutine is being notified, wait.
+			} while(!m_cv.m_first_waiting.compare_exchange_weak(
+				first,
+				coroutine,
+				std::memory_order_relaxed));
 		}
-
-		Coroutine * first = nullptr;
-		// If the condition variable is empty, make the coroutine the first coroutine.
-		m_cv.m_first_waiting.compare_exchange_strong(
-			first,
-			coroutine,
-			std::memory_order_relaxed);
 
 		return sync::block();
 	}
@@ -46,10 +50,8 @@ namespace cr::mt
 	void PODConditionVariable::notify_one()
 	{
 		// Remove the first waiting coroutine.
-		Coroutine * first;
-		for(;;)
-		{
-			first = m_first_waiting.load(std::memory_order_relaxed);
+		Coroutine * first = m_first_waiting.load(std::memory_order_relaxed);
+		do {
 			// If there is no first coroutine, return.
 			if(!first)
 				return;
