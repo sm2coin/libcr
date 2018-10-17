@@ -15,6 +15,12 @@ namespace cr::sync
 		m_count = count;
 	}
 
+	void PODBarrier::set(
+		std::size_t count)
+	{
+		m_count = count;
+	}
+
 	mayblock PODBarrier::WaitCall::libcr_wait(
 		Coroutine * coroutine)
 	{

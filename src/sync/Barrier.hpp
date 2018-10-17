@@ -26,6 +26,12 @@ namespace cr::sync
 		void initialise(
 			std::size_t count);
 
+		/** Sets the barrier to block the requested amount of coroutines.
+		@param[in] count:
+			How many coroutines to block.*/
+		void set(
+			std::size_t count);
+
 		/** Helper class for waiting for a barrier using `#CR_AWAIT`. */
 		class WaitCall
 		{
@@ -61,9 +67,10 @@ namespace cr::sync
 		/** Initialises the barrier to block `count` coroutines.
 		@param[in] count:
 			The amount of coroutines to block. */
-		Barrier(
+		explicit Barrier(
 			std::size_t count);
 
+		using PODBarrier::set;
 		using PODBarrier::wait;
 	};
 }
