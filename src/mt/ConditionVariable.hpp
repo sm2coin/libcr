@@ -58,6 +58,18 @@ namespace cr::mt
 			Only notifies and removes coroutines that were waiting before the call, not those added during the call. */
 		void notify_all();
 	};
+
+	class ConditionVariable : PODConditionVariable
+	{
+	public:
+		/** Initialises the condition variable. */
+		ConditionVariable();
+
+		using PODConditionVariable::empty;
+		using PODConditionVariable::wait;
+		using PODConditionVariable::notify_one;
+		using PODConditionVariable::notify_all;
+	};
 }
 
 #include "ConditionVariable.inl"

@@ -101,4 +101,9 @@ namespace cr::mt
 				return;
 		}
 	}
+
+	ConditionVariable::ConditionVariable()
+	{
+		PODConditionVariable::initialise();
+	}
 }
