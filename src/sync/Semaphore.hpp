@@ -5,11 +5,12 @@
 
 namespace cr::sync
 {
+	template<class ConditionVariable>
 	/** POD semaphore type. */
 	class PODSemaphore
 	{
 		/** The semaphore's condition variable. */
-		PODConditionVariable m_cv;
+		ConditionVariable m_cv;
 		/** The semaphore's counter. */
 		std::size_t m_counter;
 	public:
@@ -23,13 +24,13 @@ namespace cr::sync
 		class WaitCall
 		{
 			/** The semaphore to wait for. */
-			PODSemaphore &m_semaphore;
+			PODSemaphore<ConditionVariable> &m_semaphore;
 		public:
 			/** Initialises the wait call.
 			@param[in] semaphore:
 				The semaphore to wait for. */
 			constexpr WaitCall(
-				PODSemaphore &semaphore);
+				PODSemaphore<ConditionVariable> &semaphore);
 
 			/** Waits for the semaphore.
 			@param[in] coroutine:
@@ -48,12 +49,13 @@ namespace cr::sync
 		void notify();
 	};
 
+	template<class ConditionVariable>
 	/** Semaphore type. */
-	class Semaphore : PODSemaphore
+	class Semaphore : PODSemaphore<ConditionVariable>
 	{
 	public:
-		using PODSemaphore::wait;
-		using PODSemaphore::notify;
+		using PODSemaphore<ConditionVariable>::wait;
+		using PODSemaphore<ConditionVariable>::notify;
 
 		/** Creates a semaphore.
 		@param[in] counter:

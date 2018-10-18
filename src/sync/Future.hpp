@@ -139,10 +139,10 @@ namespace cr::sync
 
 	template<class T>
 	/** POD future type that supports only one waiting coroutine. */
-	using PODSingleFuture = PODFutureBase<T, PODSingleEvent>;
+	using PODFIFOFuture = PODFutureBase<T, PODFIFOEvent>;
 	template<class T>
 	/** Future type that supports only one waiting coroutine. */
-	using SingleFuture = FutureBase<T, PODSingleEvent>;
+	using FIFOFuture = FutureBase<T, PODFIFOEvent>;
 }
 
 #include "Future.inl"

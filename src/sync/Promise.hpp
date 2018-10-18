@@ -111,7 +111,7 @@ namespace cr::sync
 	/** POD promise type supporting only one waiting coroutine.
 	@tparam T:
 		The promise's value type. */
-	using PODSinglePromise = PODPromiseBase<T, PODSingleEvent>;
+	using PODFIFOPromise = PODPromiseBase<T, PODFIFOEvent>;
 	template<class T>
 	/** Promise type.
 	@tparam T:
@@ -121,7 +121,7 @@ namespace cr::sync
 	/** Promise type supporting only one waiting coroutine.
 	@tparam T:
 		The promise's value type. */
-	using SinglePromise = PromiseBase<T, PODSingleEvent>;
+	using FIFOPromise = PromiseBase<T, PODFIFOEvent>;
 }
 
 #include "Promise.inl"

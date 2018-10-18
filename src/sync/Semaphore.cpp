@@ -2,14 +2,16 @@
 
 namespace cr::sync
 {
-	void PODSemaphore::initialise(
+	template<class ConditionVariable>
+	void PODSemaphore<ConditionVariable>::initialise(
 		std::size_t counter)
 	{
 		m_cv.initialise();
 		m_counter = counter;
 	}
 
-	mayblock PODSemaphore::WaitCall::libcr_wait(
+	template<class ConditionVariable>
+	mayblock PODSemaphore<ConditionVariable>::WaitCall::libcr_wait(
 		Coroutine * coroutine)
 	{
 		if(m_semaphore.m_counter == 0)
@@ -21,7 +23,8 @@ namespace cr::sync
 		}
 	}
 
-	void PODSemaphore::notify()
+	template<class ConditionVariable>
+	void PODSemaphore<ConditionVariable>::notify()
 	{
 		if(m_cv.empty())
 		{
@@ -32,9 +35,15 @@ namespace cr::sync
 		}
 	}
 
-	Semaphore::Semaphore(
+	template<class ConditionVariable>
+	Semaphore<ConditionVariable>::Semaphore(
 		std::size_t counter)
 	{
-		PODSemaphore::initialise(counter);
+		PODSemaphore<ConditionVariable>::initialise(counter);
 	}
+
+	template class PODSemaphore<PODConditionVariable>;
+	template class PODSemaphore<PODFIFOConditionVariable>;
+	template class Semaphore<PODConditionVariable>;
+	template class Semaphore<PODFIFOConditionVariable>;
 }

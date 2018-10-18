@@ -1,12 +1,14 @@
 namespace cr::sync
 {
-	constexpr PODSemaphore::WaitCall::WaitCall(
+	template<class ConditionVariable>
+	constexpr PODSemaphore<ConditionVariable>::WaitCall::WaitCall(
 		PODSemaphore &semaphore):
 		m_semaphore(semaphore)
 	{
 	}
 
-	constexpr PODSemaphore::WaitCall PODSemaphore::wait()
+	template<class ConditionVariable>
+	constexpr typename PODSemaphore<ConditionVariable>::WaitCall PODSemaphore<ConditionVariable>::wait()
 	{
 		return WaitCall(*this);
 	}

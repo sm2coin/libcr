@@ -146,18 +146,18 @@ namespace cr::sync
 	/** POD consumable event type. */
 	typedef PODConsumableEventBase<PODConditionVariable> PODConsumableEvent;
 	/** POD event type supporting only one waiting coroutine. */
-	typedef PODEventBase<PODSingleConditionVariable> PODSingleEvent;
+	typedef PODEventBase<PODFIFOConditionVariable> PODFIFOEvent;
 	/** POD consumable event type supporting only one waiting coroutine. */
-	typedef PODConsumableEventBase<PODSingleConditionVariable> PODSingleConsumableEvent;
+	typedef PODConsumableEventBase<PODFIFOConditionVariable> PODFIFOConsumableEvent;
 
 	/** Event type. */
 	typedef EventBase<PODConditionVariable> Event;
 	/** Consumable event type. */
 	typedef ConsumableEventBase<PODConditionVariable> ConsumableEvent;
 	/** Event type supporting only one waiting coroutine. */
-	typedef EventBase<PODSingleConditionVariable> SingleEvent;
+	typedef EventBase<PODFIFOConditionVariable> FIFOEvent;
 	/** Consumable event type supporting only one waiting coroutine. */
-	typedef ConsumableEventBase<PODSingleConditionVariable> SingleConsumableEvent;
+	typedef ConsumableEventBase<PODFIFOConditionVariable> FIFOConsumableEvent;
 }
 
 #include "Event.inl"

@@ -2,26 +2,30 @@
 
 namespace cr::sync
 {
-	void PODBarrier::initialise()
+	template<class ConditionVariable>
+	void PODBarrierBase<ConditionVariable>::initialise()
 	{
 		m_cv.initialise();
 		m_count = 0;
 	}
 
-	void PODBarrier::initialise(
+	template<class ConditionVariable>
+	void PODBarrierBase<ConditionVariable>::initialise(
 		std::size_t count)
 	{
 		m_cv.initialise();
 		m_count = count;
 	}
 
-	void PODBarrier::set(
+	template<class ConditionVariable>
+	void PODBarrierBase<ConditionVariable>::set(
 		std::size_t count)
 	{
 		m_count = count;
 	}
 
-	mayblock PODBarrier::WaitCall::libcr_wait(
+	template<class ConditionVariable>
+	mayblock PODBarrierBase<ConditionVariable>::WaitCall::libcr_wait(
 		Coroutine * coroutine)
 	{
 		if(m_barrier.m_count)
@@ -38,14 +42,21 @@ namespace cr::sync
 			return nonblock();
 	}
 
-	Barrier::Barrier()
+	template<class ConditionVariable>
+	BarrierBase<ConditionVariable>::BarrierBase()
 	{
-		initialise();
+		PODBarrierBase<ConditionVariable>::initialise();
 	}
 
-	Barrier::Barrier(
+	template<class ConditionVariable>
+	BarrierBase<ConditionVariable>::BarrierBase(
 		std::size_t count)
 	{
-		initialise(count);
+		PODBarrierBase<ConditionVariable>::initialise(count);
 	}
+
+	template class PODBarrierBase<PODConditionVariable>;
+	template class PODBarrierBase<PODFIFOConditionVariable>;
+	template class BarrierBase<PODConditionVariable>;
+	template class BarrierBase<PODFIFOConditionVariable>;
 }

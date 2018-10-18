@@ -12,8 +12,8 @@ namespace cr
 
 namespace cr::sync
 {
-	/** POD condition variable that can be waited for by an arbitrary number of coroutines. */
-	class PODConditionVariable
+	/** POD condition variable with FIFO notifications. */
+	class PODFIFOConditionVariable
 	{
 		/** The first coroutine waiting. */
 		Coroutine * m_first_waiting;
@@ -31,13 +31,13 @@ namespace cr::sync
 		class WaitCall
 		{
 			/** The condition variable to wait for. */
-			PODConditionVariable &m_cv;
+			PODFIFOConditionVariable &m_cv;
 		public:
 			/** Initialises the wait call.
 			@param[in] cv:
 				The condition variable to wait for. */
 			constexpr WaitCall(
-				PODConditionVariable &cv);
+				PODFIFOConditionVariable &cv);
 
 			/** Adds a coroutine to the queue.
 			@param[in] coroutine:
@@ -63,22 +63,22 @@ namespace cr::sync
 		void notify_all();
 	};
 
-	/** Condition variable that can be waited for by an arbitrary number of coroutines. */
-	class ConditionVariable : PODConditionVariable
+	/** Condition variable with FIFO notifications. */
+	class FIFOConditionVariable : PODFIFOConditionVariable
 	{
 	public:
 		/** Initialises the condition variable. */
-		ConditionVariable();
+		FIFOConditionVariable();
 
-		using PODConditionVariable::empty;
-		using PODConditionVariable::wait;
-		using PODConditionVariable::front;
-		using PODConditionVariable::notify_one;
-		using PODConditionVariable::notify_all;
+		using PODFIFOConditionVariable::empty;
+		using PODFIFOConditionVariable::wait;
+		using PODFIFOConditionVariable::front;
+		using PODFIFOConditionVariable::notify_one;
+		using PODFIFOConditionVariable::notify_all;
 	};
 
-	/** POD condition variable that can be waited for by a single coroutine. */
-	class PODSingleConditionVariable
+	/** POD condition variable, with LIFO notifications. */
+	class PODConditionVariable
 	{
 		/** The waiting coroutine.*/
 		Coroutine * m_waiting;
@@ -94,13 +94,13 @@ namespace cr::sync
 		{
 		protected:
 			/** The condition variable to wait on. */
-			PODSingleConditionVariable &m_cv;
+			PODConditionVariable &m_cv;
 		public:
 			/** Initialises the wait call.
 			@param[in] cv:
 				The condition variable to wait on. */
 			constexpr WaitCall(
-				PODSingleConditionVariable &cv);
+				PODConditionVariable &cv);
 
 			/** Adds a coroutine to the queue.
 			@param[in] coroutine:
@@ -124,18 +124,18 @@ namespace cr::sync
 		void notify_all();
 	};
 
-	/** Condition variable that can be waited for by a single coroutine. */
-	class SingleConditionVariable : PODSingleConditionVariable
+	/** Condition variable with LIFO notifications. */
+	class ConditionVariable : PODConditionVariable
 	{
 	public:
 		/** Initialises the condition variable. */
-		SingleConditionVariable();
+		ConditionVariable();
 
-		using PODSingleConditionVariable::empty;
-		using PODSingleConditionVariable::wait;
-		using PODSingleConditionVariable::front;
-		using PODSingleConditionVariable::notify_one;
-		using PODSingleConditionVariable::notify_all;
+		using PODConditionVariable::empty;
+		using PODConditionVariable::wait;
+		using PODConditionVariable::front;
+		using PODConditionVariable::notify_one;
+		using PODConditionVariable::notify_all;
 	};
 }
 

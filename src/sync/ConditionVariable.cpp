@@ -1,15 +1,17 @@
 #include "ConditionVariable.hpp"
 #include "../Coroutine.hpp"
 
+#include "Barrier.hpp"
+
 namespace cr::sync
 {
-	void PODConditionVariable::initialise()
+	void PODFIFOConditionVariable::initialise()
 	{
 		m_first_waiting = nullptr;
 		m_last_waiting = nullptr;
 	}
 
-	block PODConditionVariable::WaitCall::libcr_wait(
+	block PODFIFOConditionVariable::WaitCall::libcr_wait(
 		Coroutine * coroutine)
 	{
 		assert(coroutine != nullptr);
@@ -30,7 +32,7 @@ namespace cr::sync
 		return block();
 	}
 
-	void PODConditionVariable::notify_one()
+	void PODFIFOConditionVariable::notify_one()
 	{
 		if(empty())
 			return;
@@ -49,63 +51,75 @@ namespace cr::sync
 		first->directly_call_child();
 	}
 
-	void PODConditionVariable::notify_all()
+	void PODFIFOConditionVariable::notify_all()
 	{
-		if(empty())
-			return;
+		Coroutine * coroutine = m_first_waiting;
+		m_first_waiting = nullptr;
+		m_last_waiting = nullptr;
+		while(coroutine)
+		{
+			Coroutine * next = coroutine->next_waiting();
 
-		// Only notify coroutines waiting since before notify_all().
-		Coroutine * last = m_last_waiting;
+			coroutine->resume();
+			coroutine->directly_call_child();
 
-		// Notify all but the last coroutine.
-		while(front() != last)
-			notify_one();
-
-		// Notify the last coroutine.
-		notify_one();
+			coroutine = next;
+		}
 	}
 
-	ConditionVariable::ConditionVariable()
+	FIFOConditionVariable::FIFOConditionVariable()
 	{
 		initialise();
 	}
 
-	void PODSingleConditionVariable::initialise()
+	void PODConditionVariable::initialise()
 	{
 		m_waiting = nullptr;
 	}
 
-	block PODSingleConditionVariable::WaitCall::libcr_wait(
+	block PODConditionVariable::WaitCall::libcr_wait(
 		Coroutine * coroutine)
 	{
 		assert(coroutine != nullptr);
 		assert(!coroutine->waiting());
 
-		assert(m_cv.m_waiting == nullptr);
+		if(m_cv.m_waiting)
+			coroutine->libcr_next_waiting.store(m_cv.m_waiting, std::memory_order_relaxed);
+		else
+			coroutine->pause();
 
 		m_cv.m_waiting = coroutine;
-		coroutine->pause();
 
 		return block();
 	}
 
-	void PODSingleConditionVariable::notify_one()
+	void PODConditionVariable::notify_one()
 	{
 		if(m_waiting)
 		{
 			Coroutine * first = m_waiting;
-			m_waiting = nullptr;
+			m_waiting = first->next_waiting();
 			first->resume();
 			first->directly_call_child();
 		}
 	}
 
-	void PODSingleConditionVariable::notify_all()
+	void PODConditionVariable::notify_all()
 	{
-		notify_one();
+		Coroutine * coroutine = m_waiting;
+		m_waiting = nullptr;
+		while(coroutine)
+		{
+			Coroutine * next = coroutine->next_waiting();
+
+			coroutine->resume();
+			coroutine->directly_call_child();
+
+			coroutine = next;
+		}
 	}
 
-	SingleConditionVariable::SingleConditionVariable()
+	ConditionVariable::ConditionVariable()
 	{
 		initialise();
 	}
