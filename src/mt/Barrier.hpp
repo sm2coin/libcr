@@ -5,11 +5,12 @@
 
 namespace cr::mt
 {
+	template<class ConditionVariable>
 	/** Multithreading enabled barrier type. */
-	class PODBarrier
+	class PODBarrierBase
 	{
 		/** The barrier's condition variable. */
-		PODConditionVariable m_cv;
+		ConditionVariable m_cv;
 		/** How many coroutines to block. */
 		std::atomic_size_t m_count;
 	public:
@@ -31,13 +32,13 @@ namespace cr::mt
 		class WaitCall
 		{
 			/** The barrier to wait for. */
-			PODBarrier &m_barrier;
+			PODBarrierBase<ConditionVariable> &m_barrier;
 		public:
 			/** Creates a wait call.
 			@param[in] barrier:
 				The barrier to wait for. */
 			constexpr WaitCall(
-				PODBarrier &barrier);
+				PODBarrierBase<ConditionVariable> &barrier);
 
 			/** Waits for the barrier.
 			@param[in] coroutine:
@@ -53,21 +54,27 @@ namespace cr::mt
 		[[nodiscard]] constexpr WaitCall wait();
 	};
 
+	template<class ConditionVariable>
 	/** Multithreading enabled barrier type. */
-	class Barrier : PODBarrier
+	class BarrierBase : PODBarrierBase<ConditionVariable>
 	{
 	public:
 		/** Initialises the barrier to an unblocking state. */
-		Barrier();
+		BarrierBase();
 		/** Initialises the barrier to block `count` coroutines.
 		@param[in] count:
 			The amount of corouines to block. */
-		explicit Barrier(
+		explicit BarrierBase(
 			std::size_t count);
 
-		using PODBarrier::set;
-		using PODBarrier::wait;
+		using PODBarrierBase<ConditionVariable>::set;
+		using PODBarrierBase<ConditionVariable>::wait;
 	};
+
+	typedef PODBarrierBase<PODConditionVariable> PODBarrier;
+	typedef PODBarrierBase<PODFIFOConditionVariable> PODFIFOBarrier;
+	typedef BarrierBase<PODConditionVariable> Barrier;
+	typedef BarrierBase<PODFIFOConditionVariable> FIFOBarrier;
 }
 
 #include "Barrier.inl"
