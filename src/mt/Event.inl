@@ -1,4 +1,4 @@
-namespace cr::sync
+namespace cr::mt
 {
 	template<class ConditionVariable>
 	constexpr PODEventBase<ConditionVariable>::WaitCall::WaitCall(
@@ -8,9 +8,7 @@ namespace cr::sync
 	}
 
 	template<class ConditionVariable>
-	constexpr
-		typename PODEventBase<ConditionVariable>::WaitCall
-		PODEventBase<ConditionVariable>::wait()
+	constexpr typename PODEventBase<ConditionVariable>::WaitCall PODEventBase<ConditionVariable>::wait()
 	{
 		return WaitCall(*this);
 	}
@@ -23,10 +21,8 @@ namespace cr::sync
 	}
 
 	template<class ConditionVariable>
-	constexpr
-		typename PODConsumableEventBase<ConditionVariable>::ConsumeCall
-		PODConsumableEventBase<ConditionVariable>::consume()
+	constexpr typename PODConsumableEventBase<ConditionVariable>::ConsumeCall PODConsumableEventBase<ConditionVariable>::consume()
 	{
-		return ConsumeCall(*this);
+		return WaitCall(*this);
 	}
 }

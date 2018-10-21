@@ -56,7 +56,7 @@ namespace cr::sync
 
 		/** Notifies the first waiting coroutine, if exists.
 			Removes the notified coroutine from the waiting queue. */
-		void notify_one();
+		bool notify_one();
 
 		/** Notifies all waiting coroutines.
 			Only notifies and removes coroutines that were waiting before the call, not those added during the call. */
@@ -118,7 +118,7 @@ namespace cr::sync
 		inline Coroutine * front();
 
 		/** Notifies the waiting coroutine, if exists. */
-		void notify_one();
+		bool notify_one();
 
 		/** Notifies all waiting coroutines. */
 		void notify_all();

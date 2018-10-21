@@ -52,8 +52,10 @@ namespace cr::mt
 		[[nodiscard]] constexpr WaitCall wait();
 
 		/** Notifies the first waiting coroutine, if exists.
-			Removes the notified coroutine from the waiting queue. */
-		void notify_one();
+			Removes the notified coroutine from the waiting queue.
+		@return
+			Whether a coroutine was notified. */
+		bool notify_one();
 
 		/** Notifies all waiting coroutines.
 			Only notifies and removes coroutines that were waiting before the call, not those added during the call. */

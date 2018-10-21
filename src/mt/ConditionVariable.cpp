@@ -42,7 +42,7 @@ namespace cr::mt
 		return sync::block();
 	}
 
-	void PODFIFOConditionVariable::notify_one()
+	bool PODFIFOConditionVariable::notify_one()
 	{
 		// Remove the first waiting coroutine.
 		Coroutine * first = nullptr;
@@ -53,7 +53,7 @@ namespace cr::mt
 
 		// If there is no first coroutine, return.
 		if(!first)
-			return;
+			return false;
 
 		// Now, no coroutine can be removed until first is set again.
 
@@ -89,6 +89,8 @@ namespace cr::mt
 		// Resume the removed coroutine.
 		first->resume();
 		first->directly_call_child();
+
+		return true;
 	}
 
 	void PODFIFOConditionVariable::notify_all()

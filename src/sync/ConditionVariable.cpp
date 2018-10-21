@@ -32,10 +32,10 @@ namespace cr::sync
 		return block();
 	}
 
-	void PODFIFOConditionVariable::notify_one()
+	bool PODFIFOConditionVariable::notify_one()
 	{
 		if(empty())
-			return;
+			return false;
 
 		Coroutine * first = m_first_waiting;
 
@@ -49,6 +49,8 @@ namespace cr::sync
 
 		first->resume();
 		first->directly_call_child();
+
+		return true;
 	}
 
 	void PODFIFOConditionVariable::notify_all()
@@ -93,15 +95,17 @@ namespace cr::sync
 		return block();
 	}
 
-	void PODConditionVariable::notify_one()
+	bool PODConditionVariable::notify_one()
 	{
-		if(m_waiting)
-		{
-			Coroutine * first = m_waiting;
-			m_waiting = first->next_waiting();
-			first->resume();
-			first->directly_call_child();
-		}
+		if(!m_waiting)
+			return false;
+
+		Coroutine * first = m_waiting;
+		m_waiting = first->next_waiting();
+		first->resume();
+		first->directly_call_child();
+
+		return true;
 	}
 
 	void PODConditionVariable::notify_all()

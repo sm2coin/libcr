@@ -1,18 +1,15 @@
-/** @file Event.hpp
-	Contains the event class. */
-#ifndef __libcr_sync_event_hpp_defined
-#define __libcr_sync_event_hpp_defined
+#ifndef __libcr_mt_event_hpp_defined
+#define __libcr_mt_event_hpp_defined
 
 #include "ConditionVariable.hpp"
-#include "Block.hpp"
 
-namespace cr::sync
+namespace cr::mt
 {
 	template<class ConditionVariable>
 	class PODConsumableEventBase;
 
 	template<class ConditionVariable>
-	/** POD repeatable event type.
+	/** Threadsafe POD repeatable event type.
 	@tparam ConditionVariable:
 		Which condition variable flavour to use. */
 	class PODEventBase
@@ -21,17 +18,15 @@ namespace cr::sync
 		/** The event's condition variable. */
 		ConditionVariable m_cv;
 		/** Whether the event happened. */
-		bool m_happened;
+		std::atomic_bool m_active;
 	public:
 		/** Initialises the event. */
 		void initialise();
 
-		/** Sets the event.
-			Notifies all waiting coroutines. The event must not have happened already. */
+		/** Fires the event, notifying all waiting coroutines.
+			The event stays active until cleared. */
 		void fire();
-
-		/** Clears the event.
-			The event must have happened already. */
+		/** Clears the event. */
 		void clear();
 
 		/** Helper class for waiting for an event using `#CR_AWAIT`. */
@@ -52,22 +47,19 @@ namespace cr::sync
 				The coroutine to wait for the event.
 			@return
 				Whether the call blocks. */
-			[[nodiscard]] mayblock libcr_wait(
+			[[nodiscard]] sync::mayblock libcr_wait(
 				Coroutine * coroutine);
 		};
 
 		/** Waits until the event happens.
 			If has not yet happened, blocks the coroutine until the event happens. To be used with `#CR_AWAIT`. */
 		[[nodiscard]] constexpr WaitCall wait();
-
-		/** Whether the event happened. */
-		inline bool happened() const;
 	};
 
 	template<class ConditionVariable>
-	/** Repeatable event type.
-	@tparam ConditionVariable:
-		Which condition variable flavour to use. */
+	/** Threadsafe repeatable event type.
+	@tparam ConditionVariable
+	Which condition varaible flavour to use. */
 	class EventBase : PODEventBase<ConditionVariable>
 	{
 	public:
@@ -81,12 +73,10 @@ namespace cr::sync
 	};
 
 	template<class ConditionVariable>
-	/** POD consumable event type.
-		Every `fire()` notifies only one coroutine. */
 	class PODConsumableEventBase : PODEventBase<ConditionVariable>
 	{
 		using PODEventBase<ConditionVariable>::m_cv;
-		using PODEventBase<ConditionVariable>::m_happened;
+		using PODEventBase<ConditionVariable>::m_active;
 	public:
 		using PODEventBase<ConditionVariable>::initialise;
 		using PODEventBase<ConditionVariable>::clear;
@@ -99,7 +89,7 @@ namespace cr::sync
 		/** Helper class for waiting for a consumable event using `#CR_AWAIT`. */
 		class ConsumeCall
 		{
-			/** The event to wait for. */
+			/** Initialises the event call. */
 			PODConsumableEventBase<ConditionVariable> &m_event;
 		public:
 			/** Initialises the wait call.
@@ -113,7 +103,7 @@ namespace cr::sync
 				The coroutine waiting for the event.
 			@return
 				Whether the call blocks. */
-			[[nodiscard]] mayblock libcr_wait(
+			[[nodiscard]] sync::mayblock libcr_wait(
 				Coroutine * coroutine);
 		};
 
