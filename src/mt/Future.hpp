@@ -4,7 +4,7 @@
 #include "Event.hpp"
 #include "../util/Argument.hpp"
 
-namespace cr::sync
+namespace cr::mt
 {
 	template<class T, class Event>
 	class PODPromiseBase;
