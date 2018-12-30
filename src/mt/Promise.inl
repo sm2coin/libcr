@@ -26,7 +26,6 @@ namespace cr::sync
 	template<class Event>
 	void PODPromiseBase<void, Event>::fulfill()
 	{
-		initialise();
 		assert(m_future != nullptr);
 		m_future->fulfill();
 	}
@@ -35,18 +34,16 @@ namespace cr::sync
 	void PODPromiseBase<T, Event>::fulfill(
 		T const& value)
 	{
-		assert(m_future);
-		m_future->m_value = value;
-		m_future->fulfill();
+		assert(m_future != nullptr);
+		m_future->fulfill(value);
 	}
 
 	template<class T, class Event>
 	void PODPromiseBase<T, Event>::fulfill(
 		T && value)
 	{
-		assert(m_future);
-		m_future->m_value = std::move(value);
-		m_future->fulfill();
+		assert(m_future != nullptr);
+		m_future->fulfill(std::move(value));
 	}
 
 	template<class T, class Event>

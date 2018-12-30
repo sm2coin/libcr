@@ -2,6 +2,7 @@
 #define __libcr_mt_event_hpp_defined
 
 #include "ConditionVariable.hpp"
+#include "detail/SoftMutex.hpp"
 
 namespace cr::mt
 {
@@ -19,9 +20,19 @@ namespace cr::mt
 		ConditionVariable m_cv;
 		/** Whether the event happened. */
 		std::atomic_bool m_active;
+		/** Number of currently registering coroutines. */
+		std::atomic_size_t m_registering;
+		/** Userspace mutex. */
+		detail::PODSoftMutex m_mutex;
 	public:
-		/** Initialises the event. */
-		void initialise();
+		/** Initialises the event.
+		@param[in] active:
+			Whether the event should be active from the beginning. */
+		void initialise(
+			bool active = false);
+
+		/** Whether the event is active. */
+		inline bool active() const;
 
 		/** Fires the event, notifying all waiting coroutines.
 			The event stays active until cleared. */
@@ -77,10 +88,12 @@ namespace cr::mt
 	{
 		using PODEventBase<ConditionVariable>::m_cv;
 		using PODEventBase<ConditionVariable>::m_active;
+		using PODEventBase<ConditionVariable>::m_registering;
+		using PODEventBase<ConditionVariable>::m_mutex;
 	public:
 		using PODEventBase<ConditionVariable>::initialise;
 		using PODEventBase<ConditionVariable>::clear;
-		using PODEventBase<ConditionVariable>::happened;
+		using PODEventBase<ConditionVariable>::active;
 
 		/** Notifies only one coroutine.
 			The event is only set if no coroutine is waiting. */
@@ -110,6 +123,11 @@ namespace cr::mt
 		/** Waits until the event happens.
 			If has not yet happened, blocks the coroutine until the event happens. Otherwise, clears the event. To be used with `#CR_AWAIT`. */
 		[[nodiscard]] constexpr ConsumeCall consume();
+		/** Tries to consume the event, if it is active.
+			If it was active, consumes it and sets it to inactive.
+		@return
+			Whether the event was active. */
+		bool try_consume();
 	};
 
 	template<class ConditionVariable>

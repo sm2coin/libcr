@@ -1,7 +1,5 @@
-/** @file Future.hpp
-	Contains the future class. */
-#ifndef __libcr_sync_future_hpp_defined
-#define __libcr_sync_future_hpp_defined
+#ifndef __libcr_mt_future_hpp_defined
+#define __libcr_mt_future_hpp_defined
 
 #include "Event.hpp"
 #include "../util/Argument.hpp"
@@ -10,26 +8,8 @@ namespace cr::sync
 {
 	template<class T, class Event>
 	class PODPromiseBase;
-	template<class T, class Event>
-	class PODPromiseBaseBase;
-
 	template<class Event>
-	/** POD future base class.
-		Essentially a non-repeatable event.
-	@tparam Event:
-		The event flavour to use. */
-	class PODFutureBaseBase : Event
-	{
-	public:
-		using Event::wait;
-		using Event::initialise;
-
-		/** Fulfills the promise.
-			The promise must not yet be fulfilled. All waiting coroutines are notified. */
-		void fulfill();
-		/** Whether the promise was fulfilled. */
-		inline bool fulfilled() const;
-	};
+	class PODFutureBaseBase;
 
 	template<class T, class Event>
 	/** POD class for futures with a value.
@@ -43,34 +23,41 @@ namespace cr::sync
 	/** POD class for futures without a value.
 	@tparam Event:
 		The future's event flavour. */
-	class PODFutureBase<void, Event> : PODFutureBaseBase<Event>
+	class PODFutureBase<void, Event> : Event
 	{
 		friend class PODPromiseBase<void, Event>;
 
-		using PODFutureBaseBase<Event>::fulfill;
+		using fulfill = Event::fire;
 	public:
-		using PODFutureBaseBase<Event>::wait;
-		using PODFutureBaseBase<Event>::initialise;
-		using PODFutureBaseBase<Event>::fulfilled;
-		using PODFutureBaseBase<Event>::listeners;
+		using Event::wait;
+		using Event::initialise;
+		using fulfilled = Event::active;
 
 		/** The future's value type. */
 		typedef void value_t;
 	};
 
 	template<class T, class Event>
-	class PODFutureBase : PODFutureBaseBase<Event>
+	class PODFutureBase : Event
 	{
 		friend class PODPromiseBase<T, Event>;
 		/** The future's value. */
 		T m_value;
+		/** To avoid race conditions when fulfilling the promise. */
+		detail::PODSoftMutex m_mutex;
 
-		using PODFutureBaseBase<Event>::fulfill;
+		/** Fulfills the promise (move assignment). */
+		bool fulfill(
+			T && value);
+		/** Fulfills the promise (copy assignment). */
+		bool fulfill(
+			T const& value);
 	public:
-		using PODFutureBaseBase<Event>::wait;
-		using PODFutureBaseBase<Event>::initialise;
-		using PODFutureBaseBase<Event>::fulfilled;
-		using PODFutureBaseBase<Event>::listeners;
+		using Event::wait;
+		using fulfilled = Event::active;
+
+		/** Initialise the future. */
+		void initialise();
 
 		/** Retrieves the future's value.
 			The future must be fulfilled.

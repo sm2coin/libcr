@@ -71,9 +71,13 @@ namespace cr::mt
 		using PODBarrierBase<ConditionVariable>::wait;
 	};
 
+	/** Threadsafe POD barrier type without ordering guarantees. */
 	typedef PODBarrierBase<PODConditionVariable> PODBarrier;
+	/** Threadsafe POD barrier type with FIFO ordering. */
 	typedef PODBarrierBase<PODFIFOConditionVariable> PODFIFOBarrier;
+	/** Threadsafe barrier type without ordering guarantees. */
 	typedef BarrierBase<PODConditionVariable> Barrier;
+	/** Threadsafe barrier type with FIFO ordering. */
 	typedef BarrierBase<PODFIFOConditionVariable> FIFOBarrier;
 }
 

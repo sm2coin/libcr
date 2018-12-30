@@ -1,4 +1,5 @@
 #include "Barrier.hpp"
+#include "../Coroutine.hpp"
 
 namespace cr::mt
 {
@@ -6,7 +7,7 @@ namespace cr::mt
 	void PODBarrierBase<ConditionVariable>::initialise()
 	{
 		m_cv.initialise();
-		m_count.store(0, std::memory_order_relaxed);
+		std::atomic_init(&m_count, (std::size_t) 0);
 	}
 
 	template<class ConditionVariable>
@@ -14,7 +15,7 @@ namespace cr::mt
 		std::size_t count)
 	{
 		m_cv.initialise();
-		m_count.store(count, std::memory_order_relaxed);
+		std::atomic_init(&m_count, count);
 	}
 
 	template<class ConditionVariable>
@@ -22,23 +23,29 @@ namespace cr::mt
 		std::size_t count)
 	{
 		m_count.store(count, std::memory_order_relaxed);
+		if(!count)
+			m_cv.notify_all();
 	}
 
 	template<class ConditionVariable>
 	sync::mayblock PODBarrierBase<ConditionVariable>::WaitCall::libcr_wait(
 		Coroutine * coroutine)
 	{
-		std::size_t count = m_barrier.m_count.load(std::memory_order_relaxed);
+		std::size_t count = 1;
 
 		// Decrement the barrier's counter.
-		do {
-			// If the barrier was unblocked in the meantime, return.
-			if(!count)
-				return sync::nonblock();
-		} while(!m_barrier.m_count.compare_exchange_weak(
+		while(!m_barrier.m_count.compare_exchange_weak(
 			count,
 			count - 1,
-			std::memory_order_relaxed));
+			std::memory_order_acq_rel,
+			std::memory_order_relaxed))
+		{
+			// If the barrier was unblocked in the meantime, return.
+			if(!count)
+			{
+				return sync::nonblock();
+			}
+		}
 
 		// Did this coroutine unblock the barrier?
 		if(count == 1)
@@ -47,7 +54,7 @@ namespace cr::mt
 			return sync::nonblock();
 		} else
 		{
-			return m_barrier.m_cv.wait().libcr_wait(coroutine);
+			return coroutine->libcr_unpack_wait(m_barrier.m_cv.wait());
 		}
 	}
 

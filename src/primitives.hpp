@@ -28,12 +28,15 @@
 /** @def CR_AWAIT(operation)
 	If `operation` is blocking, yields the coroutine until the operation finished.
 	Only works with nest coroutines. */
-#define CR_AWAIT(operation) do { \
+#define CR_AWAIT(operation) LIBCR_HELPER_AWAIT(__COUNTER__, operation)
+#define LIBCR_HELPER_AWAIT(id, operation) do { \
 	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_AWAIT"); \
+	LIBCR_HELPER_SAVE(id); \
 	if(::cr::sync::block() == ::cr::Coroutine::libcr_unpack_wait(operation)) \
 	{ \
 		do { \
-			CR_YIELD; \
+			return false; \
+			LIBCR_HELPER_LABEL(id):; \
 		} while(waiting()); \
 	} \
 } while(0)

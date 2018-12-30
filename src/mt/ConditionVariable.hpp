@@ -57,9 +57,44 @@ namespace cr::mt
 			Whether a coroutine was notified. */
 		bool notify_one();
 
+		/** Removes the first waiting coroutine, if exists.
+			Removes the first coroutine from the waiting queue.
+			`resume_and_wait_for_completion()` needs to be called on the removed coroutine before accessing it.
+			The coroutine is not resumed.
+		@return
+			The removed coroutine, or null. */
+		Coroutine * remove_one();
+
 		/** Notifies all waiting coroutines.
-			Only notifies and removes coroutines that were waiting before the call, not those added during the call. */
-		void notify_all();
+			Only notifies and removes coroutines that were waiting before the call, not those added during the call.
+		@return
+			Whether any coroutines were notified. */
+		bool notify_all();
+
+		/** Removes the all waiting coroutines from the waiting queue.
+			`resume_and_wait_for_completion()` needs to be called on all removed coroutines before accessing them.
+			No coroutine is resumed.
+		@param[out] first:
+			The first removed coroutine.
+		@param[out] last:
+			The last removed coroutine.
+		@return
+			Whether any coroutines were removed. */
+		bool remove_all(
+			Coroutine * &first,
+			Coroutine * &last);
+
+		/** Resumes a removed coroutine and waits until it is safe to access.
+			This does not execute a removed coroutine.
+		@param[in] coroutine:
+			The coroutine to resume.
+		@param[in] last:
+			The last removed coroutine.
+		@return
+			The next waiting coroutine, or null. */
+		static Coroutine * resume_and_wait_for_completion(
+			Coroutine * coroutine,
+			Coroutine * last);
 	};
 
 	/** Threadsafe condition variable with FIFO notifications. */
@@ -115,13 +150,48 @@ namespace cr::mt
 
 		/** Notifies the first waiting coroutine, if exists.
 			Removes the notified coroutine from the waiting queue.
-			Might reorder the coroutine queue. */
-		void notify_one();
+		@return
+			Whether a coroutine was notified. */
+		bool notify_one();
+
+		/** Removes the first waiting coroutine, if exists.
+			Removes the first coroutine from the waiting queue.
+			`resume_and_wait_for_completion()` needs to be called on the removed coroutine before accessing it.
+			The coroutine is not resumed.
+		@return
+			The removed coroutine, or null. */
+		Coroutine * remove_one();
 
 		/** Notifies all waiting coroutines.
 			Only notifies and removes coroutines that were waiting before the call, not those added during the call.
-			Notifies all coroutines in the reverse error. */
-		void notify_all();
+		@return
+			Whether any coroutines were notified. */
+		bool notify_all();
+
+		/** Removes the all waiting coroutines from the waiting queue.
+			`resume_and_wait_for_completion()` needs to be called on all removed coroutines before accessing them.
+			No coroutine is resumed.
+		@param[out] first:
+			The first removed coroutine.
+		@param[out] last:
+			Ignored. Used for compatibility with FIFO CVs.
+		@return
+			Whether any coroutines were removed. */
+		bool remove_all(
+			Coroutine * &first,
+			Coroutine * &last);
+
+		/** Resumes a removed coroutine.
+			This does not execute a removed coroutine.
+		@param[in] coroutine:
+			The coroutine to resume.
+		@param[in] last:
+			The last removed coroutine.
+		@return
+			The next coroutine, or null. */
+		static Coroutine * resume_and_wait_for_completion(
+			Coroutine * coroutine,
+			Coroutine * last);
 	};
 
 	/** Threadsafe condition variable without notification ordering guarantees.

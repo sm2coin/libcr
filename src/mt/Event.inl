@@ -23,6 +23,6 @@ namespace cr::mt
 	template<class ConditionVariable>
 	constexpr typename PODConsumableEventBase<ConditionVariable>::ConsumeCall PODConsumableEventBase<ConditionVariable>::consume()
 	{
-		return WaitCall(*this);
+		return ConsumeCall(*this);
 	}
 }

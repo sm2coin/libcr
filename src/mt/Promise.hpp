@@ -1,12 +1,12 @@
 /** @file Promise.hpp
 	Contains the promise type. */
-#ifndef __libcr_sync_promise_hpp_defined
-#define __libcr_sync_promise_hpp_defined
+#ifndef __libcr_mt_promise_hpp_defined
+#define __libcr_mt_promise_hpp_defined
 
 #include "Future.hpp"
 #include "../util/Argument.hpp"
 
-namespace cr::sync
+namespace cr::mt
 {
 	template<class T, class Event>
 	/** POD promise base type.
