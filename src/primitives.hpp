@@ -200,11 +200,11 @@
 
 
 /** @def CR_EXTERNAL
-	Ends the definition of a nested of a coroutine declaration, and marks it as externally implemented. Use `#CR_IMPL` and `#CR_PIMPL` to implement the coroutine. */
+	Ends the definition of a nested coroutine declaration, and marks it as externally implemented. Use `#CR_IMPL` and `#CR_PIMPL` to implement the coroutine. */
 #define CR_EXTERNAL bool _cr_implementation(); \
 };
 /** @def CR_EXTERNAL_INLINE
-	Ends the definition of a nested of a coroutine declaration, and marks it as externally implemented, using the `inline` specifier. Use `#CR_IMPL` and `#CR_PIMPL` to implement the coroutine. */
+	Ends the definition of a nested coroutine declaration, and marks it as externally implemented, using the `inline` specifier. Use `#CR_IMPL` and `#CR_PIMPL` to implement the coroutine. */
 #define CR_EXTERNAL_INLINE inline bool _cr_implementation(); \
 };
 
