@@ -5,6 +5,7 @@
 
 #include "Coroutine.hpp"
 #include "sync/sync.hpp"
+#include "mt/mt.hpp"
 
 /** The libcr namespace. */
 namespace cr

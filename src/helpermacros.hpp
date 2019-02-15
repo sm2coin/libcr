@@ -70,9 +70,4 @@
 
 #define LIBCR_HELPER_PREPARE(obj, ...) (obj).prepare(__VA_ARGS__)
 
-#define LIBCR_HELPER_ASSERT_CHILD do { \
-	LIBCR_HELPER_ASSERT_NESTED_SELF("LIBCR_HELPER_ASSERT_CHILD"); \
-	assert("The coroutine must be the child." && ::cr::Coroutine::libcr_root->libcr_stack == this); \
-} while(0)
-
 #endif

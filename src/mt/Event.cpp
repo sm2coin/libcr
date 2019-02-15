@@ -120,7 +120,7 @@ namespace cr::mt
 			{
 				lock.unlock();
 				m_cv.resume_and_wait_for_completion(removed, removed);
-				removed->directly_call_child();
+				(*removed)();
 				return;
 			}
 

@@ -10,6 +10,8 @@ namespace cr::mt
 	class PODPromiseBase;
 	template<class Event>
 	class PODFutureBaseBase;
+	template<class T, class Event>
+	class PODPromiseBaseBase;
 
 	template<class T, class Event>
 	/** POD class for futures with a value.
@@ -26,12 +28,13 @@ namespace cr::mt
 	class PODFutureBase<void, Event> : Event
 	{
 		friend class PODPromiseBase<void, Event>;
-
-		using fulfill = Event::fire;
+		/** Fulfills the promise. */
+		inline void fulfill();
 	public:
 		using Event::wait;
 		using Event::initialise;
-		using fulfilled = Event::active;
+		/** Whether the future is fulfilled. */
+		inline bool fulfilled() const;
 
 		/** The future's value type. */
 		typedef void value_t;
@@ -54,7 +57,8 @@ namespace cr::mt
 			T const& value);
 	public:
 		using Event::wait;
-		using fulfilled = Event::active;
+		/** Whether the future was fulfilled. */
+		inline bool fulfilled() const;
 
 		/** Initialise the future. */
 		void initialise();

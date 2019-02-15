@@ -1,5 +1,17 @@
 namespace cr::mt
 {
+	template<class Event>
+	void PODFutureBase<void, Event>::fulfill()
+	{
+		Event::fire();
+	}
+
+	template<class Event>
+	bool PODFutureBase<void, Event>::fulfilled() const
+	{
+		return Event::active();
+	}
+
 	template<class T, class Event>
 	bool PODFutureBase<T, Event>::fulfill(
 		T && value)
@@ -50,6 +62,12 @@ namespace cr::mt
 
 		// Whether we were the ones to fulfill the promise.
 		return lock.locked();
+	}
+
+	template<class T, class Event>
+	bool PODFutureBase<T, Event>::fulfilled() const
+	{
+		return Event::active();
 	}
 
 	template<class T, class Event>

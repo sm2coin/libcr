@@ -16,9 +16,13 @@ namespace cr::mt
 			Never blocks the coroutine.
 		@return
 			Whether the lock was acquired. */
-		using try_lock = PODConsumableEventBase<ConditionVariable>::try_consume;
-		using lock = PODConsumableEventBase<ConditionVariable>::consume;
-		using unlock = PODConsumableEventBase<ConditionVariable>::fire;
+		inline bool try_lock();
+		/** Locks the mutex.
+			If the mutex is locked already, blocks the coroutine until the mutex is released. To be used with `#CR_AWAIT`. */
+		inline typename PODConsumableEventBase<ConditionVariable>::ConsumeCall lock();
+		/** Unlocks the mutex.
+			The mutex must be locked. Only the owner should unlock the mutex. */
+		inline void unlock();
 
 		/** Initialises the mutex to an unlocked state. */
 		inline void initialise();
@@ -30,7 +34,7 @@ namespace cr::mt
 	class MutexBase : PODMutexBase<ConditionVariable>
 	{
 	public:
-		inline Mutex();
+		inline MutexBase();
 
 		using PODMutexBase<ConditionVariable>::lock;
 		using PODMutexBase<ConditionVariable>::try_lock;

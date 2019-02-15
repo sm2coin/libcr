@@ -58,7 +58,7 @@ namespace cr::mt
 		if(removed)
 		{
 			resume_and_wait_for_completion(removed, removed);
-			removed->directly_call_child();
+			(*removed)();
 			return true;
 		} else {
 			return false;
@@ -141,7 +141,7 @@ namespace cr::mt
 			next = resume_and_wait_for_completion(first, last);
 
 			// Notify the coroutine.
-			first->directly_call_child();
+			(*first)();
 			// Set the next coroutine.
 			first = next;
 		} while(next);
@@ -265,7 +265,7 @@ namespace cr::mt
 		{
 			// The coroutine was already resumed.
 			// Notify the first removed coroutine.
-			removed->directly_call_child();
+			(*removed)();
 
 			return true;
 		} else
@@ -365,7 +365,7 @@ namespace cr::mt
 			// Resume the coroutine and get the next in line.
 			next = resume_and_wait_for_completion(removed, nullptr);
 			// notify the coroutine.
-			removed->directly_call_child();
+			(*removed)();
 
 			removed = next;
 		} while(next);

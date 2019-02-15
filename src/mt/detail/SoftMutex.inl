@@ -31,7 +31,7 @@ namespace cr::mt::detail
 	}
 
 	void LockGuard::lock(
-		SoftMutex &mutex)
+		PODSoftMutex &mutex)
 	{
 		assert(!locked());
 		m_mutex = &mutex;
@@ -39,7 +39,7 @@ namespace cr::mt::detail
 	}
 
 	bool LockGuard::try_lock(
-		SoftMutex &mutex)
+		PODSoftMutex &mutex)
 	{
 		assert(!locked());
 		if(mutex.try_lock())

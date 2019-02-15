@@ -48,7 +48,7 @@ namespace cr::sync
 		m_first_waiting = first->next_waiting();
 
 		first->resume();
-		first->directly_call_child();
+		(*first)();
 
 		return true;
 	}
@@ -63,7 +63,7 @@ namespace cr::sync
 			Coroutine * next = coroutine->next_waiting();
 
 			coroutine->resume();
-			coroutine->directly_call_child();
+			(*coroutine)();
 
 			coroutine = next;
 		}
@@ -103,7 +103,7 @@ namespace cr::sync
 		Coroutine * first = m_waiting;
 		m_waiting = first->next_waiting();
 		first->resume();
-		first->directly_call_child();
+		(*first)();
 
 		return true;
 	}
@@ -117,7 +117,7 @@ namespace cr::sync
 			Coroutine * next = coroutine->next_waiting();
 
 			coroutine->resume();
-			coroutine->directly_call_child();
+			(*coroutine)();
 
 			coroutine = next;
 		}

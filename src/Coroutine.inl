@@ -9,30 +9,24 @@ namespace cr
 		return static_cast<DerivedCoroutine *>(this)->_cr_implementation();
 	}
 
-	bool Coroutine::is_root() const
-	{
-		return libcr_root == this;
-	}
-
-	bool Coroutine::is_child() const
-	{
-		return libcr_root->libcr_stack == this;
-	}
-
-	bool Coroutine::operator()()
+	void Coroutine::operator()()
 	{
 		assert(libcr_magic_number == LIBCR_MAGIC_NUMBER);
-		assert(is_root() && "Only call the root coroutine.");
 
-		return (libcr_stack->*libcr_stack->libcr_coroutine)();
+		(this->*libcr_coroutine)();
 	}
 
-	bool Coroutine::directly_call_child()
+	template<class T>
+	T &Coroutine::local()
 	{
-		assert(libcr_magic_number == LIBCR_MAGIC_NUMBER);
-		assert(is_child() && "Only call the child coroutine.");
+		return libcr_context->local<T>();
+	}
 
-		return (this->*libcr_coroutine)();
+	template<class T>
+	bool Coroutine::libcr_unpack_wait(
+		T * value)
+	{
+		return value->libcr_wait(this);
 	}
 
 	template<class T>
@@ -77,28 +71,46 @@ namespace cr
 	}
 
 	template<class T, class>
-	bool ExposeCoroutine::directly_call_child(
+	void ExposeCoroutine::invoke(
 		T & coroutine)
 	{
 		assert(coroutine.libcr_magic_number == LIBCR_MAGIC_NUMBER);
-		assert(coroutine.is_child() && "Only call the child coroutine.");
-
-		return coroutine._cr_implementation();
+		coroutine._cr_implementation();
 	}
 
 	template<class DerivedCoroutine>
-	void CoroutineHelper<DerivedCoroutine>::prepare()
+	template<class ...Args>
+	void CoroutineHelper<DerivedCoroutine>::prepare(
+		Context * context,
+		Args&& ...args)
 	{
 		Coroutine::prepare(
-			static_cast<impl_t>(&DerivedCoroutine::_cr_implementation));
+			static_cast<impl_t>(&DerivedCoroutine::_cr_implementation),
+			context);
+
+		static_cast<DerivedCoroutine *>(this)->cr_prepare(
+			std::forward<Args>(args)...);
 	}
 
 	template<class DerivedCoroutine>
+	template<class ...Args>
 	void CoroutineHelper<DerivedCoroutine>::prepare(
-		Coroutine * parent)
+		Coroutine * parent,
+		Args&& ...args)
 	{
 		Coroutine::prepare(
 			static_cast<impl_t>(&DerivedCoroutine::_cr_implementation),
 			parent);
+
+		static_cast<DerivedCoroutine *>(this)->cr_prepare(
+			std::forward<Args>(args)...);
+	}
+
+	template<class DerivedCoroutine>
+	void CoroutineHelper<DerivedCoroutine>::start()
+	{
+		assert(libcr_magic_number == LIBCR_MAGIC_NUMBER);
+
+		static_cast<DerivedCoroutine *>(this)->_cr_implementation();
 	}
 }

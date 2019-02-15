@@ -1,6 +1,6 @@
 #include "../helpermacros.hpp"
 
-namespace cr::sync
+namespace cr::mt
 {
 	template<class T, class Event>
 	void PODPromiseBaseBase<T, Event>::initialise()

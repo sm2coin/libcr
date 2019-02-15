@@ -5,7 +5,7 @@ namespace cr::mt::detail
 	void PODSoftMutex::lock()
 	{
 		bool value = false;
-		while(!m_flag.compare_exchange_weak(
+		while(!m_locked.compare_exchange_weak(
 			value,
 			true,
 			std::memory_order_acquire,
@@ -18,7 +18,7 @@ namespace cr::mt::detail
 	bool PODSoftMutex::try_lock()
 	{
 		bool value = false;
-		return m_flag.compare_exchange_strong(
+		return m_locked.compare_exchange_strong(
 			value,
 			true,
 			std::memory_order_acquire,
@@ -27,7 +27,7 @@ namespace cr::mt::detail
 
 	void PODSoftMutex::unlock()
 	{
-		bool was_locked = m_flag.exchange(false, std::memory_order_release);
+		bool was_locked = m_locked.exchange(false, std::memory_order_release);
 		(void)was_locked;
 		assert(was_locked);
 	}

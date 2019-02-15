@@ -56,10 +56,13 @@ namespace cr::mt::detail
 		/** Locks a mutex.
 			The lock guard must not have locked a mutex. */
 		inline void lock(
-			SoftMutex &mutex);
-
+			PODSoftMutex &mutex);
+		/** Tries to lock a mutex.
+			The lock guard must not have locked a mutex.
+		@return
+			Whether the mutex has been locked by this guard. */
 		inline bool try_lock(
-			SoftMutex &mutex);
+			PODSoftMutex &mutex);
 
 		/** Whether the lock guard locks a mutex. */
 		inline bool locked() const;

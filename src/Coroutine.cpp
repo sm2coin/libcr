@@ -11,13 +11,14 @@ namespace cr
 	}
 
 	void Coroutine::prepare(
-		impl_t coroutine)
+		impl_t coroutine,
+		Context * context)
 	{
 		PlainCoroutine::prepare();
-		libcr_root = this;
-		libcr_stack = this;
+		libcr_parent = nullptr;
+		libcr_context = context;
 		libcr_coroutine = coroutine;
-		libcr_next_waiting.store(nullptr, std::memory_order_relaxed);
+		std::atomic_init(&libcr_next_waiting, nullptr);
 	}
 
 	void Coroutine::prepare(
@@ -25,10 +26,10 @@ namespace cr
 		Coroutine * parent)
 	{
 		PlainCoroutine::prepare();
-		libcr_root = parent->libcr_root;
-		libcr_stack = parent;
+		libcr_parent = parent;
+		libcr_context = parent->libcr_context;
 		libcr_coroutine = coroutine;
-		libcr_next_waiting.store(nullptr, std::memory_order_relaxed);
+		std::atomic_init(&libcr_next_waiting, nullptr);
 	}
 
 	void Coroutine::pause()
@@ -40,6 +41,6 @@ namespace cr
 	void Coroutine::resume()
 	{
 		assert(waiting());
-		libcr_next_waiting.store(nullptr, std::memory_order_acquire);
+		libcr_next_waiting.exchange(nullptr, std::memory_order_acquire);
 	}
 }

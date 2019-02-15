@@ -3,6 +3,7 @@
 #ifndef __libcr_coroutine_hpp_defined
 #define __libcr_coroutine_hpp_defined
 
+#include "Context.hpp"
 #include "primitives.hpp"
 
 #include <atomic>
@@ -64,12 +65,12 @@ namespace cr
 			The coroutine state to execute.
 		@return
 			Whether the coroutine is done. */
-		typedef bool (Coroutine::*impl_t)();
+		typedef void (Coroutine::*impl_t)();
 
-		/** The outermost coroutine. */
-		Coroutine * libcr_root;
-		/** When `is_root()`, points to the deepest nested coroutine, otherwise to the immediate parent coroutine. */
-		Coroutine * libcr_stack;
+		/** The coroutine's "thread_local" storage. */
+		Context * libcr_context;
+		/** The coroutine's parent coroutine (or null). */
+		Coroutine * libcr_parent;
 		/** The coroutine implementation.
 			Used to enter a coroutine. */
 		impl_t libcr_coroutine;
@@ -81,7 +82,8 @@ namespace cr
 		@param[in] coroutine:
 			The coroutine implementation. */
 		void prepare(
-			impl_t coroutine);
+			impl_t coroutine,
+			Context * context);
 
 		/** Prepares the coroutine to be a child coroutine.
 		@param[in] coroutine:
@@ -92,21 +94,22 @@ namespace cr
 			impl_t coroutine,
 			Coroutine * parent);
 
+		/** Directly progresses the coroutine until its next suspension.
+			This should only be called by library functions. */
+		inline void operator()();
 
-		/** Whether this coroutine is the outermost coroutine. */
-		inline bool is_root() const;
-		/** Whether this coroutine is the innermost coroutine. */
-		inline bool is_child() const;
+		template<class T>
+		/** Short-hand for `Context::local()`. */
+		inline T &local();
 
-		/** Calls the coroutine.
+		template<class T>
+		/** Waits for an awaitable object.
+		@param[in] value:
+			An awaitable object.
 		@return
-			Whether the coroutine is done. */
-		inline bool operator()();
-
-		/** Directly calls the coroutine, but the coroutine must be the child coroutine.
-		@return
-			Whether the coroutine is done. */
-		inline bool directly_call_child();
+			Whether the coroutine does not need to wait. */
+		inline bool libcr_unpack_wait(
+			T * value);
 
 		template<class T>
 		/** Waits for an awaitable object.
@@ -174,10 +177,8 @@ namespace cr
 			class = typename std::enable_if<
 				std::is_base_of<Coroutine, T>::value
 			>::type>
-		/** Directly calls the child coroutine.
-		@return
-			Whether the coroutine is done. */
-		static inline bool directly_call_child(
+		/** Directly calls a coroutine (link time address). */
+		static inline void invoke(
 			T &coroutine);
 	};
 
@@ -189,13 +190,23 @@ namespace cr
 	{
 		friend DerivedCoroutine;
 	public:
+		template<class ...Args>
 		/** Prepares the coroutine as the root coroutine. */
-		inline void prepare();
+		inline void prepare(
+			Context * context,
+			Args&& ...args);
+
+		template<class ...Args>
 		/** Prepares the coroutine as a child coroutine.
 		@param[in] parent:
 			The parent coroutine. */
 		inline void prepare(
-			Coroutine * parent);
+			Coroutine * parent,
+			Args&& ...args);
+
+		/** Starts the coroutine.
+			This should only be called once per coroutine! */
+		inline void start();
 	};
 }
 

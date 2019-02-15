@@ -17,9 +17,22 @@
 } while(0)
 
 /** @def CR_YIELD
-	Saves the execution progress and yields the execution to the calling function. */
+	Saves the execution progress and yields the execution to the calling function.
+	Only works with nest coroutines. */
 #define CR_YIELD LIBCR_HELPER_YIELD(__COUNTER__)
 #define LIBCR_HELPER_YIELD(id) do { \
+	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_YIELD"); \
+	LIBCR_HELPER_SAVE(id); \
+	return; \
+	LIBCR_HELPER_LABEL(id):; \
+} while(0)
+
+/** @def CR_PYIELD
+	Saves the execution progress and yields the execution to the calling function.
+	Only works with plain coroutines. */
+#define CR_PYIELD LIBCR_HELPER_PYIELD(__COUNTER__)
+#define LIBCR_HELPER_PYIELD(id) do { \
+	LIBCR_HELPER_ASSERT_PLAIN_SELF("CR_PYIELD"); \
 	LIBCR_HELPER_SAVE(id); \
 	return false; \
 	LIBCR_HELPER_LABEL(id):; \
@@ -33,12 +46,9 @@
 	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_AWAIT"); \
 	LIBCR_HELPER_SAVE(id); \
 	if(::cr::sync::block() == ::cr::Coroutine::libcr_unpack_wait(operation)) \
-	{ \
-		do { \
-			return false; \
-			LIBCR_HELPER_LABEL(id):; \
-		} while(waiting()); \
-	} \
+		return; \
+	LIBCR_HELPER_LABEL(id):; \
+	assert(!waiting() && "Illegal coroutine invocation."); \
 } while(0)
 
 /** @def CR_RETURN
@@ -67,12 +77,11 @@
 	Behaves equivalent to an `await` statement, the control flow only resumes after the called coroutine is done. */
 #define CR_CALL(state, ...) LIBCR_HELPER_CALL(__COUNTER__, state, ##__VA_ARGS__)
 #define LIBCR_HELPER_CALL(id, ...) do { \
-	LIBCR_HELPER_ASSERT_CHILD; \
 	LIBCR_HELPER_ASSERT_NESTED("CR_CALL", decltype(LIBCR_HELPER_HEAD(__VA_ARGS__))); \
 	LIBCR_HELPER_PREPARE(__VA_ARGS__, this); \
-	::cr::Coroutine::libcr_root->libcr_stack = ::cr::ExposeCoroutine::base(&(LIBCR_HELPER_HEAD(__VA_ARGS__))); \
 	LIBCR_HELPER_SAVE(id); \
-	return ::cr::ExposeCoroutine::directly_call_child(LIBCR_HELPER_HEAD(__VA_ARGS__)); \
+	::cr::ExposeCoroutine::invoke(LIBCR_HELPER_HEAD(__VA_ARGS__)); \
+	return; \
 	LIBCR_HELPER_LABEL(id):; \
 } while(0)
 
@@ -118,13 +127,9 @@
 			LIBCR_HELPER_ASSERT_NESTED_SELF("CR_IMPL_END"); \
 			LIBCR_HELPER_SAVE(id); \
 		cr_label_return: \
-			if(::cr::Coroutine::is_root()) \
-				return true; \
-			else \
-			{ \
-				::cr::Coroutine::libcr_root->libcr_stack = ::cr::Coroutine::libcr_stack; \
-				return ::cr::Coroutine::libcr_stack->directly_call_child(); \
-			} \
+			if(::cr::Coroutine::libcr_parent) \
+				(*::cr::Coroutine::libcr_parent)(); \
+			return; \
 		LIBCR_HELPER_LABEL(id): \
 			assert(!"NESTED coroutine called after return."); \
 		} while(0); \
@@ -138,13 +143,9 @@
 	#define CR_IMPL_END do { \
 			LIBCR_HELPER_ASSERT_NESTED_SELF("CR_IMPL_END"); \
 		cr_label_return: \
-			if(is_root()) \
-				return true; \
-			else \
-			{ \
-				::cr::Coroutine::libcr_root->libcr_stack = ::cr::Coroutine::libcr_stack; \
-				return ::cr::Coroutine::libcr_stack->directly_call_child(); \
-			}
+			if(::cr::Coroutine::libcr_parent) \
+				(*::cr::Coroutine::libcr_parent)(); \
+			return; \
 		} while(0); \
 	}
 #endif
@@ -152,12 +153,11 @@
 #define LIBCR_HELPER_INTRO do { \
 	if(::cr::PlainCoroutine::libcr_coroutine_ip) \
 		CR_RESTORE; \
-	CR_CHECKPOINT; \
 } while(0)
 
 /** @def CR_IMPL(name)
 	Starts the external implementation of the given nested coroutine. Must be followed by `#CR_IMPL_END`. */
-#define CR_IMPL(...) bool __VA_ARGS__::_cr_implementation() \
+#define CR_IMPL(...) void __VA_ARGS__::_cr_implementation() \
 { \
 	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_IMPL"); \
 	LIBCR_HELPER_INTRO;
@@ -186,7 +186,7 @@
 
 /** @def CR_INLINE
 	Starts the inline implementation of the given nested coroutine. Must be followed by `#CR_INLINE_END`. */
-#define CR_INLINE private:bool _cr_implementation() \
+#define CR_INLINE private:void _cr_implementation() \
 { \
 	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_INLINE"); \
 	LIBCR_HELPER_INTRO;
@@ -201,11 +201,11 @@
 
 /** @def CR_EXTERNAL
 	Ends the definition of a nested coroutine declaration, and marks it as externally implemented. Use `#CR_IMPL` and `#CR_PIMPL` to implement the coroutine. */
-#define CR_EXTERNAL bool _cr_implementation(); \
+#define CR_EXTERNAL private:void _cr_implementation(); \
 };
 /** @def CR_EXTERNAL_INLINE
 	Ends the definition of a nested coroutine declaration, and marks it as externally implemented, using the `inline` specifier. Use `#CR_IMPL` and `#CR_PIMPL` to implement the coroutine. */
-#define CR_EXTERNAL_INLINE inline bool _cr_implementation(); \
+#define CR_EXTERNAL_INLINE private:inline void _cr_implementation(); \
 };
 
 /** @def COROUTINE(name, inheritance)
@@ -231,7 +231,8 @@ class name : __VA_ARGS__ \
 	typedef ::cr::CoroutineHelper<name LIBCR_HELPER_UNPACK templates> LibCrBase; \
 	friend class ::cr::ExposeCoroutine; \
 public: \
-	using ::cr::Coroutine::operator();
+	using LibCrBase::start; \
+	using LibCrBase::prepare;
 
 /** @def COROUTINE_PLAIN(name, inheritance)
 	Creates a plain coroutine with the given name.
@@ -252,7 +253,6 @@ public: \
 class name : __VA_ARGS__ \
 { \
 	friend class ::cr::PlainCoroutineHelper<name LIBCR_HELPER_UNPACK templates>; \
-	friend class ::cr::MailBoxBase<name LIBCR_HELPER_UNPACK templates>; \
 	typedef name LIBCR_HELPER_UNPACK templates LibCrSelf; \
 	typedef ::cr::PlainCoroutineHelper<name LIBCR_HELPER_UNPACK templates> LibCrBase; \
 public: \
