@@ -53,11 +53,15 @@ namespace cr::sync
 		return true;
 	}
 
-	void PODFIFOConditionVariable::notify_all()
+	bool PODFIFOConditionVariable::notify_all()
 	{
 		Coroutine * coroutine = m_first_waiting;
 		m_first_waiting = nullptr;
 		m_last_waiting = nullptr;
+
+		if(!coroutine)
+			return false;
+
 		while(coroutine)
 		{
 			Coroutine * next = coroutine->next_waiting();
@@ -67,6 +71,8 @@ namespace cr::sync
 
 			coroutine = next;
 		}
+
+		return true;
 	}
 
 	FIFOConditionVariable::FIFOConditionVariable()
@@ -108,10 +114,14 @@ namespace cr::sync
 		return true;
 	}
 
-	void PODConditionVariable::notify_all()
+	bool PODConditionVariable::notify_all()
 	{
 		Coroutine * coroutine = m_waiting;
 		m_waiting = nullptr;
+
+		if(!coroutine)
+			return false;
+
 		while(coroutine)
 		{
 			Coroutine * next = coroutine->next_waiting();
@@ -121,6 +131,8 @@ namespace cr::sync
 
 			coroutine = next;
 		}
+
+		return true;
 	}
 
 	ConditionVariable::ConditionVariable()

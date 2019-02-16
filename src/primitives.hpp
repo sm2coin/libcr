@@ -17,15 +17,9 @@
 } while(0)
 
 /** @def CR_YIELD
-	Saves the execution progress and yields the execution to the calling function.
+	Yields the coroutine, and waits for the scheduler to resume it.
 	Only works with nest coroutines. */
-#define CR_YIELD LIBCR_HELPER_YIELD(__COUNTER__)
-#define LIBCR_HELPER_YIELD(id) do { \
-	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_YIELD"); \
-	LIBCR_HELPER_SAVE(id); \
-	return; \
-	LIBCR_HELPER_LABEL(id):; \
-} while(0)
+#define CR_YIELD CR_AWAIT(LibCrScheduler::instance().enqueue())
 
 /** @def CR_PYIELD
 	Saves the execution progress and yields the execution to the calling function.
@@ -136,9 +130,9 @@
 	}
 #else
 	#define CR_PIMPL_END do { \
-		cr_label_return:
-			return true;
-		} while(0);
+		cr_label_return: \
+			return true; \
+		} while(0); \
 	}
 	#define CR_IMPL_END do { \
 			LIBCR_HELPER_ASSERT_NESTED_SELF("CR_IMPL_END"); \
@@ -208,28 +202,30 @@
 #define CR_EXTERNAL_INLINE private:inline void _cr_implementation(); \
 };
 
-/** @def COROUTINE(name, inheritance)
+/** @def COROUTINE(name, scheduler, inheritance)
 	Creates a nested coroutine with the given name.
 	Nested coroutines are optimised for deeper nesting, and entering into a callstack has constant complexity instead of linear complexity.
 	`inheritance` is the inheritance list of the coroutine.
 
 	For coroutines with templates, use `#TEMPLATE_COROUTINE`. */
-#define COROUTINE(name, ...) LIBCR_HELPER_COROUTINE(name, (), private ::cr::CoroutineHelper<name>, ::cr::ExposeCoroutine, ##__VA_ARGS__)
+#define COROUTINE(name, scheduler, ...) LIBCR_HELPER_COROUTINE(name, (), scheduler, private ::cr::CoroutineHelper<name>, ::cr::ExposeCoroutine, ##__VA_ARGS__)
 /** @def TEMPLATE_COROUTINE(name, templates, inheritance)
 	Creates a templated nested coroutine class.
 	`templates` must be the coroutine template arguments, enclosed in parentheses.
+	`scheduler` must be the coroutine's scheduler type.
 	Example:
 
 		template<class T, std::size_t size>
-		TEMPLATE_COROUTINE(Array, (T, size)) */
-#define TEMPLATE_COROUTINE(name, templates, ...) LIBCR_HELPER_COROUTINE(name, (<LIBCR_HELPER_UNPACK templates>), private ::cr::CoroutineHelper<name<LIBCR_HELPER_UNPACK templates>>, ::cr::ExposeCoroutine, ##__VA_ARGS__)
-#define LIBCR_HELPER_COROUTINE(name, templates, ...) \
+		TEMPLATE_COROUTINE(Array, (T, size), cr::mt::Scheduler) */
+#define TEMPLATE_COROUTINE(name, templates, scheduler, ...) LIBCR_HELPER_COROUTINE(name, (<LIBCR_HELPER_UNPACK templates>), scheduler, private ::cr::CoroutineHelper<name<LIBCR_HELPER_UNPACK templates>>, ::cr::ExposeCoroutine, ##__VA_ARGS__)
+#define LIBCR_HELPER_COROUTINE(name, templates, scheduler, ...) \
 class name : __VA_ARGS__ \
 { \
 	friend class ::cr::CoroutineHelper<name LIBCR_HELPER_UNPACK templates>; \
 	typedef name LIBCR_HELPER_UNPACK templates LibCrSelf; \
 	typedef ::cr::CoroutineHelper<name LIBCR_HELPER_UNPACK templates> LibCrBase; \
 	friend class ::cr::ExposeCoroutine; \
+	typedef scheduler LibCrScheduler; \
 public: \
 	using LibCrBase::start; \
 	using LibCrBase::prepare;

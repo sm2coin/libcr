@@ -4,6 +4,7 @@
 #define __libcr_sync_conditionvariable_hpp_defined
 
 #include "Block.hpp"
+#include "../Scheduler.hpp"
 
 namespace cr
 {
@@ -59,8 +60,10 @@ namespace cr::sync
 		bool notify_one();
 
 		/** Notifies all waiting coroutines.
-			Only notifies and removes coroutines that were waiting before the call, not those added during the call. */
-		void notify_all();
+			Only notifies and removes coroutines that were waiting before the call, not those added during the call.
+		@return
+			Whether any coroutine was executed. */
+		bool notify_all();
 	};
 
 	/** Condition variable with FIFO notifications. */
@@ -69,6 +72,8 @@ namespace cr::sync
 	public:
 		/** Initialises the condition variable. */
 		FIFOConditionVariable();
+
+		using PODFIFOConditionVariable::WaitCall;
 
 		using PODFIFOConditionVariable::empty;
 		using PODFIFOConditionVariable::wait;
@@ -120,8 +125,10 @@ namespace cr::sync
 		/** Notifies the waiting coroutine, if exists. */
 		bool notify_one();
 
-		/** Notifies all waiting coroutines. */
-		void notify_all();
+		/** Notifies all waiting coroutines.
+		@return
+			Whether any coroutine was executed. */
+		bool notify_all();
 	};
 
 	/** Condition variable with LIFO notifications. */
@@ -131,12 +138,17 @@ namespace cr::sync
 		/** Initialises the condition variable. */
 		ConditionVariable();
 
+		using PODConditionVariable::WaitCall;
+
 		using PODConditionVariable::empty;
 		using PODConditionVariable::wait;
 		using PODConditionVariable::front;
 		using PODConditionVariable::notify_one;
 		using PODConditionVariable::notify_all;
 	};
+
+	typedef cr::SchedulerBase<FIFOConditionVariable> FIFOScheduler;
+	typedef cr::SchedulerBase<ConditionVariable> Scheduler;
 }
 
 #include "ConditionVariable.inl"

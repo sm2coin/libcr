@@ -2,6 +2,7 @@
 #define __libcr_mt_conditionvariable_hpp_defined
 
 #include "../sync/Block.hpp"
+#include "../Scheduler.hpp"
 
 #include <mutex>
 #include <atomic>
@@ -104,6 +105,8 @@ namespace cr::mt
 		/** Initialises the condition variable. */
 		FIFOConditionVariable();
 
+		using PODFIFOConditionVariable::WaitCall;
+
 		using PODFIFOConditionVariable::empty;
 		using PODFIFOConditionVariable::wait;
 		using PODFIFOConditionVariable::notify_one;
@@ -202,11 +205,16 @@ namespace cr::mt
 		/** Initialises the condition variable. */
 		ConditionVariable();
 
+		using PODConditionVariable::WaitCall;
+
 		using PODConditionVariable::empty;
 		using PODConditionVariable::wait;
 		using PODConditionVariable::notify_one;
 		using PODConditionVariable::notify_all;
 	};
+
+	typedef cr::SchedulerBase<FIFOConditionVariable> FIFOScheduler;
+	typedef cr::SchedulerBase<ConditionVariable> Scheduler;
 }
 
 #include "ConditionVariable.inl"
