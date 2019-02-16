@@ -107,6 +107,20 @@ namespace cr
 	}
 
 	template<class DerivedCoroutine>
+	template<class ...Args>
+	void CoroutineHelper<DerivedCoroutine>::prepare(
+		nullptr_t,
+		Args&& ...args)
+	{
+		Coroutine::prepare(
+			static_cast<impl_t>(&DerivedCoroutine::_cr_implementation),
+			(Context *)nullptr);
+
+		static_cast<DerivedCoroutine *>(this)->cr_prepare(
+			std::forward<Args>(args)...);
+	}
+
+	template<class DerivedCoroutine>
 	void CoroutineHelper<DerivedCoroutine>::start()
 	{
 		assert(libcr_magic_number == LIBCR_MAGIC_NUMBER);

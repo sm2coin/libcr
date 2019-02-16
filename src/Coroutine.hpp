@@ -204,6 +204,12 @@ namespace cr
 			Coroutine * parent,
 			Args&& ...args);
 
+		template<class ...Args>
+		/** Prepares the coroutine as the root coroutine, without a context. */
+		inline void prepare(
+			nullptr_t,
+			Args&& ...args);
+
 		/** Starts the coroutine.
 			This should only be called once per coroutine! */
 		inline void start();
