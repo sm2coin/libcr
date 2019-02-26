@@ -42,7 +42,7 @@
 	if(::cr::sync::block() == ::cr::Coroutine::libcr_unpack_wait(operation)) \
 		return; \
 	LIBCR_HELPER_LABEL(id):; \
-	assert(!waiting() && "Illegal coroutine invocation."); \
+	assert(!cr::Coroutine::waiting() && "Illegal coroutine invocation."); \
 } while(0)
 
 /** @def CR_RETURN

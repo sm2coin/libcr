@@ -57,10 +57,6 @@
 #define LIBCR_HELPER_HEAD(head, ...) head
 #define LIBCR_HELPER_TAIL(head, ...) __VA_ARGS__
 
-#define LIBCR_HELPER_CONCAT(a,b) a##b
-
-#define LIBCR_HELPER_LABEL(id) LIBCR_HELPER_CONCAT(libcr_label_,id)
-
 #define LIBCR_HELPER_ASSERT_PLAIN(primitive, type) static_assert(!std::is_base_of<::cr::Coroutine, type>::value, "'" primitive "' can only be used with PLAIN coroutines!")
 #define LIBCR_HELPER_ASSERT_NESTED(primitive, type) static_assert(std::is_base_of<::cr::Coroutine, type>::value, "'" primitive "' can only be used with NESTED coroutines!")
 #define LIBCR_HELPER_ASSERT_PLAIN_SELF(name) LIBCR_HELPER_ASSERT_PLAIN(name, LibCrSelf)
