@@ -32,17 +32,44 @@
 	LIBCR_HELPER_LABEL(id):; \
 } while(0)
 
-/** @def CR_AWAIT(operation)
-	If `operation` is blocking, yields the coroutine until the operation finished.
-	Only works with nest coroutines. */
-#define CR_AWAIT(operation) LIBCR_HELPER_AWAIT(__COUNTER__, operation)
-#define LIBCR_HELPER_AWAIT(id, operation) do { \
+/** @def CR_AWAIT(operation, [error])
+	If `operation` is blocking, yields the coroutine until the operation finished. `error` is an optional argument, and contains code that is used to handle errors (no trailing semicolon is needed). Only works with nest coroutines.
+
+	Example:
+
+		CR_AWAIT(cv.wait(), {
+			something();
+		});
+
+	This is equal to the following pseudocode:
+
+		try { await cv.wait(); }
+		catch(...) { something(); } */
+#define CR_AWAIT(...) LIBCR_HELPER_OVERLOAD(LIBCR_HELPER_AWAIT, __VA_ARGS__)
+
+#define LIBCR_HELPER_AWAIT1(operation) LIBCR_HELPER_AWAIT2(operation, CR_THROW)
+#define LIBCR_HELPER_AWAIT2(operation, error) LIBCR_HELPER_AWAIT(__COUNTER__, operation, error)
+#define LIBCR_HELPER_AWAIT(id, operation, error) do { \
 	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_AWAIT"); \
 	LIBCR_HELPER_SAVE(id); \
 	if(::cr::sync::block() == ::cr::Coroutine::libcr_unpack_wait(operation)) \
 		return; \
 	LIBCR_HELPER_LABEL(id):; \
 	assert(!cr::Coroutine::waiting() && "Illegal coroutine invocation."); \
+	if(::cr::Coroutine::libcr_error) \
+	{ \
+		::cr::Coroutine::libcr_error = false; \
+		error; \
+	} \
+} while(0)
+
+/** @def CR_THROW
+	Terminates the coroutine, and executes the error handler in the `#CR_CALL` that invoked this coroutine. Must not be used in coroutines that have no calling parent coroutine. Constructions for passing error values must be created manually. Only works with nest coroutines. */
+#define CR_THROW do { \
+	LIBCR_HELPER_ASSERT_NESTED_SELF("CR_THROW"); \
+	assert(::cr::Coroutine::libcr_parent && "Cannot throw in coroutines that have no parent coroutine!"); \
+	::cr::Coroutine::libcr_parent->libcr_error = true; \
+	CR_RETURN; \
 } while(0)
 
 /** @def CR_RETURN
@@ -66,22 +93,38 @@
 	} while(0)
 #endif
 
-/** @def CR_CALL(state, args)
-	Calls a nested coroutine from inside another nested coroutine.
-	Behaves equivalent to an `await` statement, the control flow only resumes after the called coroutine is done. */
-#define CR_CALL(state, ...) LIBCR_HELPER_CALL(__COUNTER__, state, ##__VA_ARGS__)
-#define LIBCR_HELPER_CALL(id, ...) do { \
-	LIBCR_HELPER_ASSERT_NESTED("CR_CALL", decltype(LIBCR_HELPER_HEAD(__VA_ARGS__))); \
-	LIBCR_HELPER_PREPARE(__VA_ARGS__, this); \
+/** @def CR_CALL(coroutine, args, [error])
+	Calls a nested coroutine from inside another nested coroutine. `args` has to be surrounded with parentheses. `error` is an optional argument and contains error-handling code that is executed when the called coroutine exits via `#CR_THROW` (no trailing semicolon needed). If `error` is omitted, it defaults to `#CR_THROW`. Behaves equivalent to an `await` statement, the control flow only resumes after the called coroutine is done.
+
+	Example:
+
+		CR_CALL(receive, (connection, buffer, buffer_size), {
+			something();
+		});
+
+	This is equivalent to the following pseudocode:
+
+		try { await connection.receive(buffer, buffer_size); }
+		catch(...) { something(); } */
+#define CR_CALL(...) LIBCR_HELPER_OVERLOAD(LIBCR_HELPER_CALL, __VA_ARGS__)
+#define LIBCR_HELPER_CALL2(coroutine, args) LIBCR_HELPER_CALL3(coroutine, args, CR_THROW)
+#define LIBCR_HELPER_CALL3(coroutine, args, error) LIBCR_HELPER_CALL(__COUNTER__, coroutine, args, error)
+#define LIBCR_HELPER_CALL(id, coroutine, args, error) do { \
+	LIBCR_HELPER_ASSERT_NESTED("CR_CALL", decltype(coroutine)); \
+	coroutine.prepare LIBCR_HELPER_PREPARE args; \
 	LIBCR_HELPER_SAVE(id); \
-	::cr::ExposeCoroutine::invoke(LIBCR_HELPER_HEAD(__VA_ARGS__)); \
+	::cr::ExposeCoroutine::invoke(coroutine); \
 	return; \
 	LIBCR_HELPER_LABEL(id):; \
+	if(::cr::Coroutine::libcr_error) \
+	{ \
+		::cr::Coroutine::libcr_error = false; \
+		error; \
+	} \
 } while(0)
 
 /** @def CR_PCALL(state, args)
-	Calls a plain coroutine from inside another coroutine. Sets a checkpoint before calling, so it behaves like a regular function call. `args` is used to initialise the coroutine.
-	Behaves equivalent to an `await` statement, the control flow only resumes after the called coroutine is done. */
+	Calls a plain coroutine from inside another coroutine. Sets a checkpoint before calling, so it behaves like a regular function call. `args` is used to initialise the coroutine. Behaves equivalent to an `await` statement, the control flow only resumes after the called coroutine is done. */
 #define CR_PCALL(state,...) do { \
 			LIBCR_HELPER_ASSERT_PLAIN("CR_CALL_PLAIN", decltype(state)); \
 			(state).prepare(__VA_ARGS__); \

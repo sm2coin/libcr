@@ -60,11 +60,7 @@ namespace cr
 	{
 	public:
 		/** Coroutine implementation pointer type.
-			This is used to call coroutines of unknown deriving type.
-		@param[in] self:
-			The coroutine state to execute.
-		@return
-			Whether the coroutine is done. */
+			This is used to call coroutines of unknown deriving type. */
 		typedef void (Coroutine::*impl_t)();
 
 		/** The coroutine's "thread_local" storage. */
@@ -74,7 +70,8 @@ namespace cr
 		/** The coroutine implementation.
 			Used to enter a coroutine. */
 		impl_t libcr_coroutine;
-
+		/** Error flag that can be set when a blocking operation fails. */
+		bool libcr_error;
 		/** When waiting for a resource, the next coroutine in line, or self if last. */
 		std::atomic<Coroutine *> libcr_next_waiting;
 
