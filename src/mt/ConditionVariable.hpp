@@ -58,6 +58,12 @@ namespace cr::mt
 			Whether a coroutine was notified. */
 		bool notify_one();
 
+		/** Notifies the first waiting coroutine, if exists, and sets its error flag.
+			Removes the notified coroutine from the waiting queue.
+		@return
+			Whether a coroutine was notified. */
+		bool fail_one();
+
 		/** Removes the first waiting coroutine, if exists.
 			Removes the first coroutine from the waiting queue.
 			`resume_and_wait_for_completion()` needs to be called on the removed coroutine before accessing it.
@@ -71,6 +77,12 @@ namespace cr::mt
 		@return
 			Whether any coroutines were notified. */
 		bool notify_all();
+
+		/** Notifies all waiting coroutines, and sets their error flags.
+			Only notifies and removes coroutines that were waiting before the call, not those added during the call.
+		@return
+			Whether a coroutine was notified. */
+		bool fail_all();
 
 		/** Removes the all waiting coroutines from the waiting queue.
 			`resume_and_wait_for_completion()` needs to be called on all removed coroutines before accessing them.
@@ -98,19 +110,17 @@ namespace cr::mt
 			Coroutine * last);
 	};
 
-	/** Threadsafe condition variable with FIFO notifications. */
-	class FIFOConditionVariable : PODFIFOConditionVariable
+	/** Threadsafe condition variable with FIFO notifications.
+		In contrast to the POD version, this version calls `fail_all()` in the destructor. */
+	class FIFOConditionVariable : public PODFIFOConditionVariable
 	{
+		using PODFIFOConditionVariable::initialise;
 	public:
 		/** Initialises the condition variable. */
 		FIFOConditionVariable();
-
-		using PODFIFOConditionVariable::WaitCall;
-
-		using PODFIFOConditionVariable::empty;
-		using PODFIFOConditionVariable::wait;
-		using PODFIFOConditionVariable::notify_one;
-		using PODFIFOConditionVariable::notify_all;
+		/** Destroys the condition variable.
+			Calls `fail_all()`. */
+		~FIFOConditionVariable();
 	};
 
 	/** Threadsafe POD condition variable without notification ordering guarantees.
@@ -157,6 +167,12 @@ namespace cr::mt
 			Whether a coroutine was notified. */
 		bool notify_one();
 
+		/** Notifies the first waiting coroutine, if exists, and sets its error flag.
+			Removes the notified coroutine from the waiting queue.
+		@return
+			Whether a coroutine was notified. */
+		bool fail_one();
+
 		/** Removes the first waiting coroutine, if exists.
 			Removes the first coroutine from the waiting queue.
 			`resume_and_wait_for_completion()` needs to be called on the removed coroutine before accessing it.
@@ -170,6 +186,12 @@ namespace cr::mt
 		@return
 			Whether any coroutines were notified. */
 		bool notify_all();
+
+		/** Notifies all waiting coroutines, and sets their error flags.
+			Only notifies and removes coroutines that were waiting before the call, not those added during the call.
+		@return
+			Whether a coroutine was notified. */
+		bool fail_all();
 
 		/** Removes the all waiting coroutines from the waiting queue.
 			`resume_and_wait_for_completion()` needs to be called on all removed coroutines before accessing them.
@@ -198,19 +220,16 @@ namespace cr::mt
 	};
 
 	/** Threadsafe condition variable without notification ordering guarantees.
-		As long as only `notify_all()` is used, and not `notify_one()`, the coroutines are guaranteed to be notified in LIFO order. `notify_one()` can reorder the queue under certain circumstances. */
-	class ConditionVariable : PODConditionVariable
+		As long as only `notify_all()` is used, and not `notify_one()`, the coroutines are guaranteed to be notified in LIFO order. `notify_one()` can reorder the queue under certain circumstances. In contrast to the POD version, this version calls `fail_all()` in the destructor. */
+	class ConditionVariable : public PODConditionVariable
 	{
+		using PODConditionVariable::initialise;
 	public:
 		/** Initialises the condition variable. */
 		ConditionVariable();
-
-		using PODConditionVariable::WaitCall;
-
-		using PODConditionVariable::empty;
-		using PODConditionVariable::wait;
-		using PODConditionVariable::notify_one;
-		using PODConditionVariable::notify_all;
+		/** Destroys the condition variable.
+			Calls `fail_all()`. */
+		~ConditionVariable();
 	};
 
 	typedef cr::SchedulerBase<FIFOConditionVariable> FIFOScheduler;

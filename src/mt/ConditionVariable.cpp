@@ -65,6 +65,21 @@ namespace cr::mt
 		}
 	}
 
+	bool PODFIFOConditionVariable::fail_one()
+	{
+		Coroutine * removed = remove_one();
+
+		if(removed)
+		{
+			resume_and_wait_for_completion(removed, removed);
+			removed->libcr_error = true;
+			(*removed)();
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	Coroutine * PODFIFOConditionVariable::remove_one()
 	{
 		// Remove the first waiting coroutine.
@@ -140,6 +155,28 @@ namespace cr::mt
 		do {
 			next = resume_and_wait_for_completion(first, last);
 
+			// Notify the coroutine.
+			(*first)();
+			// Set the next coroutine.
+			first = next;
+		} while(next);
+
+		return true;
+	}
+
+	bool PODFIFOConditionVariable::fail_all()
+	{
+		Coroutine * first, * last;
+		// Return if there are no coroutines.
+		if(!remove_all(first, last))
+			return false;
+
+		// Notify the removed coroutines.
+		Coroutine * next = first;
+		do {
+			next = resume_and_wait_for_completion(first, last);
+
+			first->libcr_error = true;
 			// Notify the coroutine.
 			(*first)();
 			// Set the next coroutine.
@@ -225,7 +262,13 @@ namespace cr::mt
 
 	FIFOConditionVariable::FIFOConditionVariable()
 	{
-		PODFIFOConditionVariable::initialise();
+		initialise();
+	}
+
+	FIFOConditionVariable::~FIFOConditionVariable()
+	{
+		fail_all();
+		assert(!remove_one() && "Coroutines were added illegally.");
 	}
 
 	void PODConditionVariable::initialise()
@@ -263,7 +306,24 @@ namespace cr::mt
 		Coroutine * removed = remove_one();
 		if(removed)
 		{
-			// The coroutine was already resumed.
+			// Resume the removed coroutine.
+			resume_and_wait_for_completion(removed, removed);
+			// Notify the first removed coroutine.
+			(*removed)();
+
+			return true;
+		} else
+			return false;
+	}
+
+	bool PODConditionVariable::fail_one()
+	{
+		Coroutine * removed = remove_one();
+		if(removed)
+		{
+			// Resume the removed coroutine.
+			resume_and_wait_for_completion(removed, removed);
+			removed->libcr_error = true;
 			// Notify the first removed coroutine.
 			(*removed)();
 
@@ -274,7 +334,6 @@ namespace cr::mt
 
 	Coroutine * PODConditionVariable::remove_one()
 	{
-
 		// Remove the first coroutine.
 		Coroutine * removed = m_waiting.exchange(
 			nullptr,
@@ -349,25 +408,49 @@ namespace cr::mt
 
 	bool PODConditionVariable::notify_all()
 	{
-		// Remove the first coroutine.
-		Coroutine * removed = m_waiting.exchange(
-			nullptr,
-			std::memory_order_relaxed);
-		// Now, the queue is empty.
-
+		// Remove the waiting coroutines.
+		Coroutine * first;
+		Coroutine * last;
+		if(!remove_all(first, last))
 		// If there was no coroutine, return.
-		if(!removed)
 			return false;
+
+		// Now, the queue is empty.
 
 		// Notify all removed coroutines.
 		Coroutine * next;
 		do {
 			// Resume the coroutine and get the next in line.
-			next = resume_and_wait_for_completion(removed, nullptr);
+			next = resume_and_wait_for_completion(first, nullptr);
 			// notify the coroutine.
-			(*removed)();
+			(*first)();
 
-			removed = next;
+			first = next;
+		} while(next);
+		return true;
+	}
+
+	bool PODConditionVariable::fail_all()
+	{
+		// Remove the waiting coroutines.
+		Coroutine * first;
+		Coroutine * last;
+		if(!remove_all(first, last))
+		// If there was no coroutine, return.
+			return false;
+
+		// Now, the queue is empty.
+
+		// Notify all removed coroutines.
+		Coroutine * next;
+		do {
+			// Resume the coroutine and get the next in line.
+			next = resume_and_wait_for_completion(first, nullptr);
+			first->libcr_error = true;
+			// notify the coroutine.
+			(*first)();
+
+			first = next;
 		} while(next);
 		return true;
 	}
@@ -405,6 +488,12 @@ namespace cr::mt
 
 	ConditionVariable::ConditionVariable()
 	{
-		PODConditionVariable::initialise();
+		initialise();
+	}
+
+	ConditionVariable::~ConditionVariable()
+	{
+		fail_all();
+		assert(!remove_one() && "Coroutines were added illegally.");
 	}
 }
