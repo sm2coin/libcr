@@ -116,6 +116,7 @@
 	::cr::ExposeCoroutine::invoke(coroutine); \
 	return; \
 	LIBCR_HELPER_LABEL(id):; \
+	assert(!cr::Coroutine::waiting() && "Illegal coroutine invocation."); \
 	if(::cr::Coroutine::libcr_error) \
 	{ \
 		::cr::Coroutine::libcr_error = false; \
