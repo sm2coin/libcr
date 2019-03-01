@@ -1,74 +1,91 @@
 # libcr
 
-> Coroutine library draft.
-> libcr is intended to create minimal overhead coroutines with basic functionality.
+> libcr offers extremely lightweight massive 1:N and M:N multitasking via coroutines and protothreads.
 
-## Features
+*libcr is still evolving, from time to time, breaking changes are made, to improve the final product.
+Constructive criticism and suggestions are very much appreciated.*
 
-Libcr is a bare-bones **stack-less** coroutine implementation, extremely lightweight and efficient, with no fancy features. However, it is well suited to use as a base to create more powerful coroutine primitives. Currently, libcr features the following:
- * Plain coroutines: with only one pointer as state, these coroutines are extremely low in overhead.
- * Nest-coroutines: with 5 pointers as state, these coroutines allow constant-complexity (O(1)) resuming of coroutines of arbitrary nesting depth, and support scheduling, with constant-complexity enqueueing and removing of coroutines from a waiting list.
- * Extreme efficiency: Saving a coroutine's context only requires updating a single pointer. Likewise, the resuming of a coroutine's execution only requires reading that pointer, and making a call.
- * All coroutines are POD types per default, allowing them to be put into `union` types for better memory usage.
- * Primitives:
- 	* A blocking await primitive (`#CR_CALL`), that allows waiting for a child coroutine to finish.
- 	* A yield primitive (`#CR_YIELD`), that allows yielding the coroutine execution.
- 	* A return primitive (`#CR_RETURN`), that ends the coroutine.
- 	* A blocking wait primitive (`#CR_AWAIT`), that can be used to wait for blocking operations.
- 	* A checkpoint primitive (`#CR_CHECKPOINT`) that saves the coroutine execution state for the next time it is resumed.
- * Clean, easy to understand syntax.
- * No external libraries or kernel functions are used.
- * Synchronisation primitives such as `mutex`, `condition variable`, `event`, `barrier`, `promise` and `future` (namespace `cr::sync`).
+For a quick impression of how to program using libcr, read [the intro](docs/intro.md).
 
+**Coroutines?**&ensp;
+Coroutines, in contrast to functions, can terminate ("yield") at any point, and be resumed later.
+This is similar to a thread that sleeps or blocks, but without all the performance and resource overhead of real threads.
+They are [non-preemptive](https://en.wikipedia.org/wiki/Cooperative_multitasking "Cooperative multitasking on Wikipedia") in nature, so they do not achieve true parallelism on their own.
 
-## Compiling
+**Protothreads?**&ensp;
+[Protothreads](https://en.wikipedia.org/wiki/Protothread "Protothread on Wikipedia") are a simplified form of coroutine that can only yield within the top-level context (they cannot yield from within nested calls).
+Protothreads lack many features, but are very efficient: one protothread only has an overhead of 8 bytes of memory (4 on 32-bit systems), and a task switch is a simple call.
+The initial implementation of protothreads was based on [Duff's device](https://en.wikipedia.org/wiki/Duff%27s_device "Duff's device on Wikipedia"), which had the drawback that it forbids the use of `switch` statements inside the function.
+In libcr, a GCC-specific workaround has been found, which allows for restriction-free programming.
 
-You need to have `CMake` installed. Navigate to the `libcr` directory, and execute:
+**License**&ensp;
+The library is released under the **GNU Affero General Public License, version 3** (AGPLv3).
+A copy of the license text can be found in the file `LICENSE`.
+
+## 1. Features
+
+libcr is intended to be used on resource-constrained devices, such as Raspberry Pis.
+This means that everything is designed with minimum memory usage and maximum efficiency in mind.
+
+### 1.1. Technical
+
+**Lightweight**&ensp;
+A single coroutine takes up 56 bytes (on a 64-bit platform, in release mode) of memory, and task switches are at least 30 times faster than kernel threads.
+This allows for (more or less) massive parallelism even on resource-constrained systems.
+
+**Speed**&ensp;
+According to benchmarks performed on consumer-grade hardware, task switching with coroutines is 30-45 times faster than kernel task switches (we measured 6MHz and 9MHz [thread-safe and unsafe versions] for coroutines, and around 200kHz on kernel task switches on the same machine).
+
+**Thread-safe**&ensp;
+The library is thread-safe; While coroutines are usually implemented for single-threaded contexts, libcr allows true M:N threading.
+Coroutines can be passed between threads without any issues.
+This means that even greater multitasking can be achieved when using libcr with real threads.
+Of course, libcr also has a thread-unsafe implementation for even faster task switching on single-threaded systems or when it is clear that every coroutine will stay in the thread it was created in.
+
+**No dynamic allocations**&ensp;
+In libcr, nothing is allocated dynamically, which gives the user maximum freedom to control the performance.
+This also means that no stack is allocated for coroutines, which allows libcr to have small memory footprint per task.
+
+**Operating system independent**&ensp;
+Although GCC-specific features are used (the `&&` and `goto *` operators), no operating system specific functionality is used anywhere in the library, so libcr can be used anywhere GCC supports.
+
+**Plain old data (POD) types**&ensp;
+The library fully supports POD types for everything, so that the user can optimise the code using libcr to its limits.
+This allows coroutines that are called sequentially to be put into unions to save memory.
+Of course, RAII versions of all types are provided, as well, so that safer code can be written more easily.
+
+**Task-local storage**&ensp;
+Similar to `thread_local` storage, libcr supports storage that is only accessible from a single coroutine and all its children.
+This allows the efficient reuse of memory for things like `itoa` buffers and more.
+
+### 1.2. Programming
+
+**Exceptions**&ensp;
+Implementing exceptions in coroutines is not easy, as native exception mechanisms are not compatible with the coroutine execution model.
+However, we still managed to implement a working, minimalistic exception model.
+Exceptions are of the form *error* / *no error*, with no values passed, which makes them very efficient.
+
+**Events**&ensp;
+libcr implements a 100% event-driven execution model, so no polling or similar things are needed.
+Coroutine-aware versions of the most common synchronisation primitives (such as condition variables, mutexes, barriers, futures/promises, etc.) are provided by libcr.
+Those can be used just like their counterparts for threads, but are much faster due to the performant synchronisation / task switching of coroutines.
+
+**Syntax**&ensp;
+Since coroutines are not natively supported (ignoring the coroutine TS), extensive use of preprocessor macros is needed to emulate them in a user-friendly way.
+Due to constraints of the preprocessor, the syntax is not optimal, but readable enough so that the code seems somewhat natural and intuitive.
+For a quick impression of how to program using libcr, read [the intro](docs/intro.md).
+
+## 2. Installation
+
+Make sure to install some reasonably recent version of CMake.
+Then navigate into the repository and execute
 
 	cmake .
 
-This will generate makefiles or project files (depending on your setup), and also create an include directory containing all headers and the license, in `libcr/include`.
+This generates an include directory that can be used to integrate libcr into other projects, as well as make / project files that build the library (depends on how your system is configured).
 
-## Documentation
+## 3. Documentation
 
-If you have `doxygen` installed, navigate to the `libcr` directory, and execute:
-
-	doxygen Doxyfile
-
-This generates documentation in `libcr/html`.
-
-## License
-
-A copy of the license can be found in `libcr/LICENSE`.
-libcr is licensed under the GNU Affero General Public License, version 3.
-
-## Introduction
-
-A coroutine is a function whose execution can be stopped and continued at will.
-This is especially useful for functions that wait for input, or for generators.
-
-### The coroutine model
-
-In this library, a coroutine is modelled as a machine with an external interface, for inputs and outputs.
-The coroutine can be called to advance the execution until the next break point (yield).
-The coroutine always returns whether its execution finished.
-Calling an already finished coroutine is forbidden.
-
-A coroutine's implementation cannot have local variables, they must be part of the coroutine state.
-
-#### Nested coroutines
-
-This type of coroutine is optimised for nesting, with constant complexity entry into a coroutine, regardless of nesting depth. Nested coroutines can only have one child coroutine executing at any time.
-
-#### Plain coroutines
-
-Plain coroutines are very basic coroutines without optimisation, but can be used for tricks such as multiple parallel child coroutine executions within the same calling coroutine.
-
-### Tutorial
-
-Create a nested coroutine with `COROUTINE(name)` or a plain coroutine with `COROUTINE_PLAIN(name)`.
-Following that comes the public interface of the coroutine, such as paramters or functions.
-Then, `#CR_STATE` is followed by the local variables of the function.
-Then, use `#CR_INLINE` for an inline coroutine definition, or `#CR_EXTERNAL`, to mark the coroutine as externally implemented.
-
-More information can be extracted from the documentation of the classes and macros.
+You can extract the documentation of the code using doxygen.
+A doxygen configuration file is part of the repository.
+It makes doxygen output the documentation in `libcr/html/`.
