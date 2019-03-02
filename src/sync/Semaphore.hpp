@@ -1,3 +1,5 @@
+/** @file Semaphore.hpp
+	Contains the semaphore type. */
 #ifndef __libcr_sync_semaphore_hpp_defined
 #define __libcr_sync_semaphore_hpp_defined
 

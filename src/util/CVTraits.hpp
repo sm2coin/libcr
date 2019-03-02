@@ -1,3 +1,5 @@
+/** @file CVTraits.hpp
+	Contains the add_cv_pod_t and remove_cv_pod_t helper types. */
 #ifndef __libcr_util_cvtraits_hpp_defined
 #define __libcr_util_cvtraits_hpp_defined
 

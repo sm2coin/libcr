@@ -1,3 +1,5 @@
+/** @file Argument.hpp
+	Contains the copy_t and move_t types. */
 #ifndef __libcr_util_argument_hpp_defined
 #define __libcr_util_argument_hpp_defined
 

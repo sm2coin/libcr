@@ -1,3 +1,5 @@
+/** @file Future.hpp
+	Contains the thread-safe future type. */
 #ifndef __libcr_mt_future_hpp_defined
 #define __libcr_mt_future_hpp_defined
 

@@ -1,3 +1,5 @@
+/** @file sync.hpp
+	Includes all files in the cr::sync namespace. */
 #ifndef __libcr_sync_sync_hpp_defined
 #define __libcr_sync_sync_hpp_defined
 

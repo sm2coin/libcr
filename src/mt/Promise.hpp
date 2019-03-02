@@ -1,5 +1,5 @@
 /** @file Promise.hpp
-	Contains the promise type. */
+	Contains the thread-safe promise type. */
 #ifndef __libcr_mt_promise_hpp_defined
 #define __libcr_mt_promise_hpp_defined
 

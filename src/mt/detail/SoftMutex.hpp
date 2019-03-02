@@ -1,3 +1,5 @@
+/** @file SoftMutex.hpp
+	Contains a userspace mutex implementation. */
 #ifndef __libcr_mt_detail_softmutex_hpp_defined
 #define __libcr_mt_detail_softmutex_hpp_defined
 

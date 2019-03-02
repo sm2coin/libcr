@@ -1,5 +1,5 @@
 /** @file Mutex.hpp
-	Contains the mutex class. */
+	Contains the thread-safe mutex class. */
 #ifndef __libcr_mt_mutex_hpp_defined
 #define __libcr_mt_mutex_hpp_defined
 

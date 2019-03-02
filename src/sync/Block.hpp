@@ -1,3 +1,5 @@
+/** @file Block.hpp
+	Contains the nonblock, block, and mayblock types. */
 #ifndef __libcr_sync_block_hpp_defined
 #define __libcr_sync_block_hpp_defined
 

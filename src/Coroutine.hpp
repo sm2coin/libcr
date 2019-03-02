@@ -1,5 +1,5 @@
 /** @file Coroutine.hpp
-	The coroutine header. */
+	Contains the Coroutine base types and includes the syntax macros. */
 #ifndef __libcr_coroutine_hpp_defined
 #define __libcr_coroutine_hpp_defined
 

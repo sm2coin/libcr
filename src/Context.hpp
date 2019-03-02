@@ -1,3 +1,5 @@
+/** @file Context.hpp
+	Contains the task-local storage context type. */
 #ifndef __libcr_context_hpp_defined
 #define __libcr_context_hpp_defined
 

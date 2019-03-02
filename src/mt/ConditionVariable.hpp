@@ -1,3 +1,5 @@
+/** @file ConditionVariable.hpp
+	Contains the thread-safe condition variables. */
 #ifndef __libcr_mt_conditionvariable_hpp_defined
 #define __libcr_mt_conditionvariable_hpp_defined
 

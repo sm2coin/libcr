@@ -1,3 +1,5 @@
+/** @file Barrier.hpp
+	Contains a thread-safe barrier type. */
 #ifndef __libcr_mt_barrier_defined
 #define __libcr_mt_barrier_defined
 

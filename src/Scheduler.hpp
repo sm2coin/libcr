@@ -1,3 +1,5 @@
+/** @file Scheduler.hpp
+	Contains a simple scheduler implementation. */
 #ifndef __libcr_scheduler_hpp_defined
 #define __libcr_scheduler_hpp_defined
 

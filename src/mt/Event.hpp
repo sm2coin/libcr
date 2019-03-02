@@ -1,3 +1,5 @@
+/** @file Event.hpp
+	Contains the thread-safe event types. */
 #ifndef __libcr_mt_event_hpp_defined
 #define __libcr_mt_event_hpp_defined
 
