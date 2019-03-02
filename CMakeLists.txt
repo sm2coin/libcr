@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(libcr)
 
-set(CMAKE_CXX_FLAGS "-std=c++17 -g")
+set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -Wextra -Werror -g")
 
 # Select all source files.
 file(GLOB_RECURSE libcr_sources ./src/*.cpp)

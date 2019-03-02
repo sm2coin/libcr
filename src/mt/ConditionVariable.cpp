@@ -380,7 +380,7 @@ namespace cr::mt
 					// Wait until the coroutine is visible.
 					while(!tail->waiting());
 					// Is there a next coroutine waiting?
-					if(tail_next = tail->next_waiting())
+					if((tail_next = tail->next_waiting()))
 						tail = tail_next;
 					else break;
 				}
@@ -472,7 +472,7 @@ namespace cr::mt
 
 	Coroutine * PODConditionVariable::resume_and_wait_for_completion(
 		Coroutine * coroutine,
-		Coroutine * last)
+		Coroutine *)
 	{
 		assert(coroutine != nullptr);
 		Coroutine * next = coroutine->libcr_next_waiting.exchange(

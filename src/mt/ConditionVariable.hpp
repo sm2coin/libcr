@@ -212,13 +212,13 @@ namespace cr::mt
 			This does not execute a removed coroutine.
 		@param[in] coroutine:
 			The coroutine to resume.
-		@param[in] last:
-			The last removed coroutine.
+		@param[in] ignored:
+			Dummy parameter, for compatibility with the FIFO version.
 		@return
 			The next coroutine, or null. */
 		static Coroutine * resume_and_wait_for_completion(
 			Coroutine * coroutine,
-			Coroutine * last);
+			Coroutine * ignored);
 	};
 
 	/** Threadsafe condition variable without notification ordering guarantees.
