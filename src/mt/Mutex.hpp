@@ -25,20 +25,17 @@ namespace cr::mt
 		inline void unlock();
 
 		/** Initialises the mutex to an unlocked state. */
-		inline void initialise();
+		void initialise();
 
 	};
 
 	template<class ConditionVariable>
 	/** Mutex type. */
-	class MutexBase : PODMutexBase<ConditionVariable>
+	class MutexBase : public PODMutexBase<ConditionVariable>
 	{
+		using PODMutexBase<ConditionVariable>::initialise;
 	public:
 		inline MutexBase();
-
-		using PODMutexBase<ConditionVariable>::lock;
-		using PODMutexBase<ConditionVariable>::try_lock;
-		using PODMutexBase<ConditionVariable>::unlock;
 	};
 
 	typedef PODMutexBase<PODConditionVariable> PODMutex;
@@ -46,5 +43,7 @@ namespace cr::mt
 	typedef MutexBase<PODConditionVariable> Mutex;
 	typedef MutexBase<PODFIFOConditionVariable> FIFOMutex;
 }
+
+#include "Mutex.inl"
 
 #endif
