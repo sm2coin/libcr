@@ -111,9 +111,8 @@
 #define LIBCR_HELPER_CALL3(coroutine, args, error) LIBCR_HELPER_CALL(__COUNTER__, coroutine, args, error)
 #define LIBCR_HELPER_CALL(id, coroutine, args, error) do { \
 	LIBCR_HELPER_ASSERT_NESTED("CR_CALL", decltype(coroutine)); \
-	coroutine.prepare LIBCR_HELPER_PREPARE args; \
 	LIBCR_HELPER_SAVE(id); \
-	::cr::ExposeCoroutine::invoke(coroutine); \
+	coroutine.start LIBCR_HELPER_PREPARE args; \
 	return; \
 	LIBCR_HELPER_LABEL(id):; \
 	assert(!cr::Coroutine::waiting() && "Illegal coroutine invocation."); \
@@ -272,7 +271,16 @@ class name : __VA_ARGS__ \
 	typedef scheduler LibCrScheduler; \
 public: \
 	using LibCrBase::start; \
-	using LibCrBase::prepare;
+	using LibCrBase::prepare; \
+	using LibCrBase::start_prepared; \
+	name() = default; \
+	template<class Arg0, class ...Args> \
+	name(Arg0 arg0, Args&& ...args) \
+	{ \
+		start( \
+			arg0, \
+			std::forward<Args>(args)...); \
+	}
 
 /** @def COROUTINE_PLAIN(name, inheritance)
 	Creates a plain coroutine with the given name.

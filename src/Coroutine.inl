@@ -120,8 +120,39 @@ namespace cr
 			std::forward<Args>(args)...);
 	}
 
+
 	template<class DerivedCoroutine>
-	void CoroutineHelper<DerivedCoroutine>::start()
+	template<class ...Args>
+	void CoroutineHelper<DerivedCoroutine>::start(
+		Context * context,
+		Args&& ...args)
+	{
+		prepare(context, std::forward<Args>(args)...);
+		start_prepared();
+	}
+
+	template<class DerivedCoroutine>
+	template<class ...Args>
+	void CoroutineHelper<DerivedCoroutine>::start(
+		Coroutine * parent,
+		Args&& ...args)
+	{
+		prepare(parent, std::forward<Args>(args)...);
+		start_prepared();
+	}
+
+	template<class DerivedCoroutine>
+	template<class ...Args>
+	void CoroutineHelper<DerivedCoroutine>::start(
+		nullptr_t,
+		Args&& ...args)
+	{
+		prepare(nullptr, std::forward<Args>(args)...);
+		start_prepared();
+	}
+
+	template<class DerivedCoroutine>
+	void CoroutineHelper<DerivedCoroutine>::start_prepared()
 	{
 		assert(libcr_magic_number == LIBCR_MAGIC_NUMBER);
 

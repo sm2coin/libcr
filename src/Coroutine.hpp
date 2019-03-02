@@ -207,9 +207,30 @@ namespace cr
 			nullptr_t,
 			Args&& ...args);
 
-		/** Starts the coroutine.
+
+		template<class ...Args>
+		/** Prepares the coroutine as the root coroutine, and starts it. */
+		inline void start(
+			Context * context,
+			Args&& ...args);
+
+		template<class ...Args>
+		/** Prepares the coroutine as a child coroutine, and starts it.
+		@param[in] parent:
+			The parent coroutine. */
+		inline void start(
+			Coroutine * parent,
+			Args&& ...args);
+
+		template<class ...Args>
+		/** Prepares the coroutine as the root coroutine, without a context, and starts it. */
+		inline void start(
+			nullptr_t,
+			Args&& ...args);
+
+		/** Starts the coroutine after `prepare()` has been called.
 			This should only be called once per coroutine! */
-		inline void start();
+		inline void start_prepared();
 	};
 }
 

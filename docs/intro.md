@@ -26,11 +26,15 @@ COROUTINE(ACoroutine, SchedulerType)
 
 
 /* Everything after this is part of the Coroutine's internal
-   state (its local variables). */
+   state (its local variables and parameters). */
 CR_STATE
 	int i;
 	int limit;
 
+/* This function is called by libcr, and is used to receive
+   the function's parameters. You can overload this to create
+   multiple possible parameter sets. Even if your coroutine
+   takes no arguments, you need to implement this function. */
 	void cr_prepare(int limit) { this->limit = limit; }
 /* CR_INLINE allows us to implement the coroutine directly in
    its declaration. */
@@ -48,19 +52,19 @@ CR_INLINE_END
 
 int main(int argc, char ** argv)
 {
-	ACoroutine cr;
-/* This passes the arguments we want to the coroutine. Note
-   that we call `prepare` instead of `cr_prepare`: This is a
-   helper function that does additional initialisation. The
-   first argument is the task-local storage, which we can
-   leave as null for now. The rest of the arguments is used
-   to invoke `cr_prepare`. */
-	cr.prepare(nullptr, 100);
-
-/* This starts the execution of the coroutine. The `start`
-   function is separated from the `prepare` function, as it
-   might not be optimally*/
-	cr.start();
+/* A coroutine needs to preserve its state across executions,
+   so we need to create a variable for each instance of a
+   coroutine. Theoretically, after finishing, instances can
+   be reused. The constructor passes the arguments we want to
+   the coroutine and starts it. The first argument is the
+   task-local storage, which we can leave as null for now.
+   The rest of the arguments is used to invoke `cr_prepare`.
+   The default constructor does nothing. If you want to
+   execute the coroutine at a later point in time, use
+   `start()`. If you want to pass the arguments without
+   invoking the coroutine, use `prepare()` and
+   `start_prepared()`. */
+	ACoroutine cr(nullptr, 100);
 
 /* This calls the scheduler until no coroutine is waiting to
    be scheduled anymore. */
@@ -167,10 +171,9 @@ CR_INLINE_END
 
 int main(int argc, char ** argv)
 {
-	GetMessage getMessage;
 /* Imagine that this gets us some connection. */
 	Connection * connection = getConnection();
-	getMessage.start(nullptr, connection);
+	GetMessage getMessage(nullptr, connection);
 
 /* Imagine that this blocks until the connection is closed by
    the coroutine. */
