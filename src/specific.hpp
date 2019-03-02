@@ -15,11 +15,11 @@
 
 
 #define LIBCR_HELPER_SAVE(id) do { \
-	::cr::PlainCoroutine::libcr_coroutine_ip = &&LIBCR_HELPER_LABEL(id); \
+	::cr::Protothread::libcr_instruction_pointer = &&LIBCR_HELPER_LABEL(id); \
 } while(0)
 
 #define CR_RESTORE do { \
-	goto *::cr::PlainCoroutine::libcr_coroutine_ip; \
+	goto *::cr::Protothread::libcr_instruction_pointer; \
 } while(0)
 
 #else

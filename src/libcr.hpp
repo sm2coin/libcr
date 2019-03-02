@@ -6,6 +6,7 @@
 #include "Coroutine.hpp"
 #include "Context.hpp"
 #include "Scheduler.hpp"
+#include "primitives.hpp"
 
 #include "sync/sync.hpp"
 #include "mt/mt.hpp"
