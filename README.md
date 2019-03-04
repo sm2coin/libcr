@@ -84,6 +84,10 @@ Then navigate into the repository and execute
 
 This generates an include directory that can be used to integrate libcr into other projects, as well as make / project files that build the library (depends on how your system is configured).
 
+For release mode, execute:
+
+	cmake . -DLIBCR_RELEASE=ON
+
 ## 3. Documentation
 
 You can extract the documentation of the code using doxygen.

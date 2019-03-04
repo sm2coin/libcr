@@ -115,10 +115,22 @@
 #define CR_CALL(...) LIBCR_HELPER_OVERLOAD(LIBCR_HELPER_CALL, __VA_ARGS__)
 #define LIBCR_HELPER_CALL2(coroutine, args) LIBCR_HELPER_CALL3(coroutine, args, CR_THROW)
 #define LIBCR_HELPER_CALL3(coroutine, args, error) LIBCR_HELPER_CALL(__COUNTER__, coroutine, args, error)
-#define LIBCR_HELPER_CALL(id, coroutine, args, error) do { \
+#define LIBCR_HELPER_CALL(id, call, error) do { \
+	LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_CALL"); \
 	LIBCR_HELPER_ASSERT_COROUTINE("CR_CALL", decltype(coroutine)); \
-	LIBCR_HELPER_SAVE(id); \
+	LIBCR_HELPER_CALL_PREFIX(id); \
 	coroutine.start LIBCR_HELPER_PREPARE args; \
+	LIBCR_HELPER_CALL_SUFFIX(id, error); \
+} while(0)
+#define LIBCR_HELPER_CALL_PREFIX(id) do {\
+	LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_HELPER_CALL_PREFIX"); \
+	LIBCR_HELPER_ASSERT_COROUTINE("CR_HELPER_CALL_PREFIX", decltype(coroutine)); \
+	LIBCR_HELPER_SAVE(id); \
+} while(0)
+
+#define LIBCR_HELPER_CALL_SUFFIX(id, error) do {\
+	LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_HELPER_CALL_SUFFIX"); \
+	LIBCR_HELPER_ASSERT_COROUTINE("CR_HELPER_CALL_SUFFIX", decltype(coroutine)); \
 	return; \
 	LIBCR_HELPER_LABEL(id):; \
 	assert(!cr::Coroutine::waiting() && "Illegal coroutine invocation."); \
@@ -128,6 +140,16 @@
 		error; \
 	} \
 } while(0)
+
+#define CR_CALL_PREPARED(...) LIBCR_HELPER_OVERLOAD(LIBCR_HELPER_CALL_PREPARED, __VA_ARGS__)
+#define LIBCR_HELPER_CALL_PREPARED1(coroutine) LIBCR_HELPER_CALL_PREPARED2(coroutine, CR_THROW)
+#define LIBCR_HELPER_CALL_PREPARED2(coroutine, error) LIBCR_HELPER_CALL_PREPARED(__COUNTER__, coroutine, error)
+#define LIBCR_HELPER_CALL_PREPARED(id, coroutine, error) do { \
+	LIBCR_HELPER_CALL_PREFIX(id); \
+	coroutine.start_prepared(); \
+	LIBCR_HELPER_CALL_SUFFIX(id, error); \
+} while(0)
+
 
 /** @def CR_PCALL(state, args)
 	Calls a protothread from inside another coroutine. Sets a checkpoint before calling, so it behaves like a regular function call. `args` is used to initialise the coroutine. Behaves equivalent to an `await` statement, the control flow only resumes after the called coroutine is done. */
@@ -169,10 +191,20 @@
 	#define LIBCR_HELPER_IMPL_END(id) do { \
 			LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_IMPL_END"); \
 			LIBCR_HELPER_SAVE(id); \
-		[[maybe_unused]] cr_label_return: \
+			/* To suppress the "unused" warning on the label. */ \
+			goto cr_label_return; \
+		cr_label_return: \
 			if(::cr::Coroutine::libcr_parent) \
-				(*::cr::Coroutine::libcr_parent)(); \
-			return; \
+			{ \
+				::cr::Coroutine &parent = *::cr::Coroutine::libcr_parent; \
+				cr_destroy(); \
+				parent(); \
+				return; \
+			} else \
+			{ \
+				cr_destroy(); \
+				return; \
+			} \
 		LIBCR_HELPER_LABEL(id): \
 			assert(!"COROUTINE coroutine called after return."); \
 		} while(0); \
@@ -187,8 +219,16 @@
 			LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_IMPL_END"); \
 		[[maybe_unused]] cr_label_return: \
 			if(::cr::Coroutine::libcr_parent) \
-				(*::cr::Coroutine::libcr_parent)(); \
-			return; \
+			{ \
+				::cr::Coroutine &parent = *::cr::Coroutine::libcr_parent; \
+				cr_destroy(); \
+				parent(); \
+				return; \
+			} else \
+			{ \
+				cr_destroy(); \
+				return; \
+			} \
 		} while(0); \
 	}
 #endif
