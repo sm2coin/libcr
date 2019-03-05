@@ -115,20 +115,20 @@
 #define CR_CALL(...) LIBCR_HELPER_OVERLOAD(LIBCR_HELPER_CALL, __VA_ARGS__)
 #define LIBCR_HELPER_CALL2(coroutine, args) LIBCR_HELPER_CALL3(coroutine, args, CR_THROW)
 #define LIBCR_HELPER_CALL3(coroutine, args, error) LIBCR_HELPER_CALL(__COUNTER__, coroutine, args, error)
-#define LIBCR_HELPER_CALL(id, call, error) do { \
+#define LIBCR_HELPER_CALL(id, coroutine, args, error) do { \
 	LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_CALL"); \
 	LIBCR_HELPER_ASSERT_COROUTINE("CR_CALL", decltype(coroutine)); \
-	LIBCR_HELPER_CALL_PREFIX(id); \
+	LIBCR_HELPER_CALL_PREFIX(id, coroutine); \
 	coroutine.start LIBCR_HELPER_PREPARE args; \
-	LIBCR_HELPER_CALL_SUFFIX(id, error); \
+	LIBCR_HELPER_CALL_SUFFIX(id, coroutine, error); \
 } while(0)
-#define LIBCR_HELPER_CALL_PREFIX(id) do {\
+#define LIBCR_HELPER_CALL_PREFIX(id, coroutine) do {\
 	LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_HELPER_CALL_PREFIX"); \
 	LIBCR_HELPER_ASSERT_COROUTINE("CR_HELPER_CALL_PREFIX", decltype(coroutine)); \
 	LIBCR_HELPER_SAVE(id); \
 } while(0)
 
-#define LIBCR_HELPER_CALL_SUFFIX(id, error) do {\
+#define LIBCR_HELPER_CALL_SUFFIX(id, coroutine, error) do {\
 	LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_HELPER_CALL_SUFFIX"); \
 	LIBCR_HELPER_ASSERT_COROUTINE("CR_HELPER_CALL_SUFFIX", decltype(coroutine)); \
 	return; \
@@ -145,9 +145,9 @@
 #define LIBCR_HELPER_CALL_PREPARED1(coroutine) LIBCR_HELPER_CALL_PREPARED2(coroutine, CR_THROW)
 #define LIBCR_HELPER_CALL_PREPARED2(coroutine, error) LIBCR_HELPER_CALL_PREPARED(__COUNTER__, coroutine, error)
 #define LIBCR_HELPER_CALL_PREPARED(id, coroutine, error) do { \
-	LIBCR_HELPER_CALL_PREFIX(id); \
+	LIBCR_HELPER_CALL_PREFIX(id, coroutine); \
 	coroutine.start_prepared(); \
-	LIBCR_HELPER_CALL_SUFFIX(id, error); \
+	LIBCR_HELPER_CALL_SUFFIX(id, coroutine, error); \
 } while(0)
 
 
