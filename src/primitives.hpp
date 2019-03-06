@@ -179,7 +179,9 @@
 	#define CR_PIMPL_END LIBCR_HELPER_PIMPL_END(__COUNTER__)
 	#define LIBCR_HELPER_PIMPL_END(id) do { \
 			LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("CR_PIMPL_END"); \
-		[[maybe_unused]] cr_label_return: \
+			/* To suppress the "unused" warning on the label. */ \
+			goto cr_label_return; \
+		cr_label_return: \
 			LIBCR_HELPER_SAVE(id); \
 			return true; \
 		LIBCR_HELPER_LABEL(id): \
@@ -211,13 +213,17 @@
 	}
 #else
 	#define CR_PIMPL_END do { \
-		[[maybe_unused]] cr_label_return: \
+			/* To suppress the "unused" warning on the label. */ \
+			goto cr_label_return; \
+		cr_label_return: \
 			return true; \
 		} while(0); \
 	}
 	#define CR_IMPL_END do { \
 			LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_IMPL_END"); \
-		[[maybe_unused]] cr_label_return: \
+			/* To suppress the "unused" warning on the label. */ \
+			goto cr_label_return; \
+		cr_label_return: \
 			if(::cr::Coroutine::libcr_parent) \
 			{ \
 				::cr::Coroutine &parent = *::cr::Coroutine::libcr_parent; \
