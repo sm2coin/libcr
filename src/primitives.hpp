@@ -289,12 +289,21 @@
 
 
 /** @def CR_EXTERNAL
-	Ends the definition of a coroutine declaration, and marks it as externally implemented. Use `#CR_IMPL` and `#CR_PIMPL` to implement the coroutine. */
+	Ends the definition of a coroutine declaration, and marks it as externally implemented. Use `#CR_IMPL` to implement the coroutine. */
 #define CR_EXTERNAL private:void _cr_implementation(); \
 };
 /** @def CR_EXTERNAL_INLINE
-	Ends the definition of a coroutine declaration, and marks it as externally implemented, using the `inline` specifier. Use `#CR_IMPL` and `#CR_PIMPL` to implement the coroutine. */
+	Ends the definition of a coroutine declaration, and marks it as externally implemented, using the `inline` specifier. Use `#CR_IMPL` to implement the coroutine. */
 #define CR_EXTERNAL_INLINE private:inline void _cr_implementation(); \
+};
+
+/** @def CR_PEXTERNAL
+	Ends the definition of a protothread declaration, and marks it as externally implemented. Use `#CR_PIMPL` to implement the coroutine. */
+#define CR_PEXTERNAL private:bool _cr_implementation(); \
+};
+/** @def CR_PEXTERNAL_INLINE
+	Ends the definition of a protothread declaration, and marks it as externally implemented, using the `inline` specifier. Use `#CR_PIMPL` to implement the coroutine. */
+#define CR_PEXTERNAL_INLINE private:inline bool _cr_implementation(); \
 };
 
 /** @def COROUTINE(name, scheduler, inheritance)
