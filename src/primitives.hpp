@@ -30,9 +30,9 @@
 /** @def CR_PYIELD
 	Saves the execution progress and yields the execution to the calling function.
 	Only works with protothreads. */
-#define CR_PYIELD LIBCR_HELPER_PYIELD(__COUNTER__)
+#define PT_YIELD LIBCR_HELPER_PYIELD(__COUNTER__)
 #define LIBCR_HELPER_PYIELD(id) do { \
-	LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("CR_PYIELD"); \
+	LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("PT_YIELD"); \
 	LIBCR_HELPER_SAVE(id); \
 	return false; \
 	LIBCR_HELPER_LABEL(id):; \
@@ -85,16 +85,16 @@
 	goto cr_label_return; \
 } while(0)
 
-/** @def CR_PRETURN
+/** @def PT_RETURN
 	Returns from a protothread to the caller or its parent coroutine. Marks the coroutine as "done", and the coroutine must not be called again. */
 #ifdef LIBCR_DEBUG
-	#define CR_PRETURN do { \
-		LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("CR_PRETURN"); \
+	#define PT_RETURN do { \
+		LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("PT_RETURN"); \
 		goto cr_label_return; \
 	} while(0)
 #else
-	#define CR_PRETURN do { \
-		LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("CR_PRETURN"); \
+	#define PT_RETURN do { \
+		LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("PT_RETURN"); \
 		return true; \
 	} while(0)
 #endif
@@ -151,34 +151,34 @@
 } while(0)
 
 
-/** @def CR_PCALL(state, args)
-	Calls a protothread from inside another coroutine. Sets a checkpoint before calling, so it behaves like a regular function call. `args` is used to initialise the coroutine. Behaves equivalent to an `await` statement, the control flow only resumes after the called coroutine is done. */
-#define CR_PCALL(state,...) do { \
-			LIBCR_HELPER_ASSERT_PROTOTHREAD("CR_PCALL", decltype(state)); \
-			(state).prepare(__VA_ARGS__); \
+/** @def PT_CALL(state, args)
+	Calls a protothread from inside another protothread. Sets a checkpoint before calling, so it behaves like a regular function call. `args` is used to initialise the coroutine, and must be wrapped in parentheses. Behaves equivalent to an `await` statement, the control flow only resumes after the called protothread is done. */
+#define PT_CALL(state, args) do { \
+			LIBCR_HELPER_ASSERT_PROTOTHREAD("PT_CALL", decltype(state)); \
+			(state).prepare args; \
 			CR_CHECKPOINT; \
 			if(!(state)()) \
 				return false; \
 		} while(0)
 
-/** @def CR_PCALL_NAKED(state, args)
-	Calls a protothread from inside another coroutine. Does not set a checkpoint before calling. The coroutine needs to be initialised manually.
+/** @def PT_CALL_NAKED(state)
+	Calls a protothread from inside another coroutine. Does not set a checkpoint before calling. The coroutine needs to be initialised manually beforehand.
 	This behaves similar to an `await` statement, the control flow only resumes after the called coroutine is done, but it is not blocking the calling coroutine's control flow because the coroutine's previous checkpoint remains active. This means that one can use this to have multiple simultaneous coroutine calls within a single coroutine. */
-#define CR_PCALL_NAKED(state) do { \
-			LIBCR_HELPER_ASSERT_PROTOTHREAD("CR_CALL_PROTOTHREAD_NAKED", decltype(state)); \
+#define PT_CALL_NAKED(state) do { \
+			LIBCR_HELPER_ASSERT_PROTOTHREAD("PT_CALL_NAKED", decltype(state)); \
 			if(!state()) \
 				return false; \
 		} while(0)
 
 
-/** @def CR_PIMPL_END
+/** @def PT_IMPL_END
 	Marks the end of a protothread implementation. */
 /** @def CR_IMPL_END
 	Marks the end of a coroutine implementation. */
 #ifdef LIBCR_DEBUG
-	#define CR_PIMPL_END LIBCR_HELPER_PIMPL_END(__COUNTER__)
+	#define PT_IMPL_END LIBCR_HELPER_PIMPL_END(__COUNTER__)
 	#define LIBCR_HELPER_PIMPL_END(id) do { \
-			LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("CR_PIMPL_END"); \
+			LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("PT_IMPL_END"); \
 			/* To suppress the "unused" warning on the label. */ \
 			goto cr_label_return; \
 		cr_label_return: \
@@ -212,7 +212,8 @@
 		} while(0); \
 	}
 #else
-	#define CR_PIMPL_END do { \
+	#define PT_IMPL_END do { \
+			LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("PT_IMPL_END"); \
 			/* To suppress the "unused" warning on the label. */ \
 			goto cr_label_return; \
 		cr_label_return: \
@@ -252,25 +253,25 @@
 	LIBCR_HELPER_INTRO;
 
 
-/** @def CR_PIMPL(name)
-	Starts the external implementation of the given protothread. Must be followed by `#CR_PIMPL_END`. */
-#define CR_PIMPL(...) bool __VA_ARGS__::_cr_implementation() \
+/** @def PT_IMPL(name)
+	Starts the external implementation of the given protothread. Must be followed by `#PT_IMPL_END`. */
+#define PT_IMPL(...) bool __VA_ARGS__::_cr_implementation() \
 { \
-	LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("CR_PIMPL"); \
+	LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("PT_IMPL"); \
 	LIBCR_HELPER_INTRO;
 
-/** @def CR_PINLINE
-	Starts the inline implementation of the given protothread. Must be followed by `#CR_PINLINE_END`. */
-#define CR_PINLINE private:bool _cr_implementation() \
+/** @def PT_INLINE
+	Starts the inline implementation of the given protothread. Must be followed by `#PT_INLINE_END`. */
+#define PT_INLINE private:bool _cr_implementation() \
 { \
-	LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("CR_PIMPL"); \
+	LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("PT_INLINE"); \
 	LIBCR_HELPER_INTRO;
 
-/** @def CR_PINLINE_END
+/** @def PT_INLINE_END
 	Ends the inline implementation and definition of a protothread declaration. */
-#define CR_PINLINE_END \
-	LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("CR_PINLINE_END"); \
-	CR_PIMPL_END \
+#define PT_INLINE_END \
+	LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF("PT_INLINE_END"); \
+	PT_IMPL_END \
 };
 
 /** @def CR_INLINE
@@ -297,13 +298,13 @@
 #define CR_EXTERNAL_INLINE private:inline void _cr_implementation(); \
 };
 
-/** @def CR_PEXTERNAL
-	Ends the definition of a protothread declaration, and marks it as externally implemented. Use `#CR_PIMPL` to implement the coroutine. */
-#define CR_PEXTERNAL private:bool _cr_implementation(); \
+/** @def PT_EXTERNAL
+	Ends the definition of a protothread declaration, and marks it as externally implemented. Use `#PT_IMPL` to implement the coroutine. */
+#define PT_EXTERNAL private:bool _cr_implementation(); \
 };
-/** @def CR_PEXTERNAL_INLINE
-	Ends the definition of a protothread declaration, and marks it as externally implemented, using the `inline` specifier. Use `#CR_PIMPL` to implement the coroutine. */
-#define CR_PEXTERNAL_INLINE private:inline bool _cr_implementation(); \
+/** @def PT_EXTERNAL_INLINE
+	Ends the definition of a protothread declaration, and marks it as externally implemented, using the `inline` specifier. Use `#PT_IMPL` to implement the coroutine. */
+#define PT_EXTERNAL_INLINE private:inline bool _cr_implementation(); \
 };
 
 /** @def COROUTINE(name, scheduler, inheritance)
@@ -374,5 +375,9 @@ public: \
 #define CR_STATE \
 private:
 
+/** @def PT_STATE
+	Starts the internal / state variable section of a protothread. */
+#define PT_STATE \
+private:
 
 #endif
