@@ -1,6 +1,6 @@
 #include "ConditionVariable.hpp"
 #include "../Coroutine.hpp"
-#include <cassert>
+#include "../helpermacros.hpp"
 
 namespace cr::mt
 {
@@ -24,26 +24,25 @@ namespace cr::mt
 			std::memory_order_relaxed);
 
 		// `last` is now the previously last coroutine.
+		// `last` can only be null for the coroutine that comes first.
 		if(last)
 		{
+			// The condition variable was not empty previously, so link the new condition variable to the previously last coroutine.
 			// `last` cannot be removed until it is successfully linked to the next coroutine, because it is no longer the last coroutine.
-			assert(last->waiting());
-			assert(!last->next_waiting());
+
 			// Set the coroutine to be the next waiting of last.
 			// Keep the previous coroutine's release sequence intact (RMW).
-			Coroutine * waiting = last;
-			while(!last->libcr_next_waiting.compare_exchange_weak(
-				waiting,
+			[[maybe_unused]] Coroutine * check = last->libcr_next_waiting.exchange(
 				coroutine,
-				std::memory_order_relaxed))
-			{
-				// Sanity check: Wait until the coroutine waiting state is propagated.
-				if(!waiting)
-					waiting = last;
-			}
+				std::memory_order_relaxed);
+
+			// The coroutine must have been waiting.
+			assert(check == last);
 		} else
 		{
 			// The condition variable was previously empty, so register the condition variable as first.
+
+			assert(!m_cv.m_first_waiting.load(std::memory_order_relaxed));
 
 			m_cv.m_first_waiting.store(coroutine, std::memory_order_relaxed);
 		}
@@ -82,62 +81,39 @@ namespace cr::mt
 
 	Coroutine * PODFIFOConditionVariable::remove_one()
 	{
-		// Remove the first waiting coroutine.
-		Coroutine * first = nullptr;
-		// Relaxed is enough, no side effects to release.
-		first = m_first_waiting.exchange(
+		// Remove the first coroutine.
+		Coroutine * first = m_first_waiting.exchange(
 			nullptr,
 			std::memory_order_relaxed);
 
-		// If there is no first coroutine, return.
 		if(!first)
 			return nullptr;
 
-		// Now, no coroutine can be removed until first is set again.
+		// No other coroutines can be removed until first is set again.
 
-		// Get next waiting coroutine.
-		Coroutine * waiting = first;
-		// `compare_exchange_weak` is used for stronger synchronisation than `load`.
-		while(!first->libcr_next_waiting.compare_exchange_weak(
-			waiting,
-			waiting,
-			std::memory_order_relaxed))
+		// Get the first coroutine's successor.
+		Coroutine * next = first->next_waiting();
+
+		if(!next)
 		{
-			// Keep sanity: Coroutine must be waiting.
-			if(!waiting)
-				waiting = first;
-		}
-
-		// The coroutine must now be waiting, since we RMW'ed.
-		assert(waiting != nullptr);
-
-		// Is this the only / last coroutine?
-		if(waiting == first)
-		{
-			// Dummy to keep `first` if exchange fails.
-			Coroutine * last = first;
-			// If it is the only coroutine, set `last` to null before removing it.
-			// This requires strong exchange.
-			if(!m_last_waiting.compare_exchange_strong(
-				last,
+			// We only had a single coroutine.
+			Coroutine * expect = first;
+			// Clear the last waiting coroutine, but only if no new coroutine arrived.
+			if(m_last_waiting.compare_exchange_strong(
+				expect,
 				nullptr,
 				std::memory_order_relaxed))
 			{
-				// A coroutine is currently being added to the first coroutine, wait.
-				do {
-					waiting = first->next_waiting();
-				} while(!waiting);
-
-				// Set the newly added coroutine as first coroutine.
-				m_first_waiting.exchange(waiting, std::memory_order_relaxed);
+				return first;
 			}
-			// Now, the coroutine is either the only, or not the last coroutine.
-			// If the coroutine is the only one, `last` has been set to null.
-		} else
-		{
-			// Was not the last coroutine, so set the next coroutine as first coroutine.
-			m_first_waiting.exchange(waiting, std::memory_order_relaxed);
 		}
+
+		while(!next)
+			next = first->next_waiting();
+
+		assert(!m_first_waiting.load(std::memory_order_relaxed));
+		// We have a successor, set it as first.
+		m_first_waiting.store(next, std::memory_order_relaxed);
 
 		// The coroutine was already resumed earlier, return the coroutine.
 		return first;
@@ -208,11 +184,9 @@ namespace cr::mt
 		// We need to watch out for coroutines being added before setting last to null.
 
 		// Remove the last coroutine.
-		last = first;
-		while(!m_last_waiting.compare_exchange_weak(
-			last,
+		last = m_last_waiting.exchange(
 			nullptr,
-			std::memory_order_relaxed));
+			std::memory_order_relaxed);
 		// Now, the queue is empty, and adding a coroutine sets first, unlocking the queue.
 
 		// Sanity check: The last coroutine should not be null.
@@ -225,37 +199,15 @@ namespace cr::mt
 		Coroutine * coroutine,
 		Coroutine * last)
 	{
-		Coroutine * next = coroutine;
-		// Resume the coroutine, and acquire its state, also get next waiting coroutine.
-		while(!coroutine->libcr_next_waiting.compare_exchange_weak(
-			next,
-			nullptr,
-			std::memory_order_acquire,
-			std::memory_order_relaxed))
+		Coroutine * next;
+		if(coroutine != last)
 		{
-			// Keep sanity: Coroutine must be waiting.
-			if(!next)
-				next = coroutine;
-		}
+			// Wait until the coroutine has a next in line.
+			while(!(next = coroutine->next_waiting()));
+		} else next = coroutine->next_waiting();
 
-		// Is it waiting, but with no successor?
-		if(next == coroutine)
-			next = nullptr;
-
-		// Is a coroutine not completely added yet?
-		if(!next && coroutine != last)
-		{
-			// Wait until it is added.
-			do {
-				// CAS for strong synchronisation.
-				coroutine->libcr_next_waiting.compare_exchange_weak(
-					next,
-					next,
-					std::memory_order_relaxed);
-			} while(!next);
-		}
-		// Now, next is guaranteed to be the next coroutine, or null, if first = last.
-		assert(bool(next) == (coroutine != last));
+		// Acquire the coroutine's state.
+		coroutine->resume();
 
 		return next;
 	}
