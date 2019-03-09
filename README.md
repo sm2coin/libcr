@@ -93,3 +93,7 @@ For release mode, execute:
 You can extract the documentation of the code using doxygen.
 A doxygen configuration file is part of the repository.
 It makes doxygen output the documentation in `libcr/html/`.
+
+## 4. Testing and Benchmarks
+
+You can use [libcr-test](https://github.com/sm2coin/libcr-test "libcr-test on Github") to test and benchmark libcr.
