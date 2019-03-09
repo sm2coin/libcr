@@ -34,7 +34,8 @@ A single coroutine takes up 56 bytes (on a 64-bit platform, in release mode) of 
 This allows for (more or less) massive parallelism even on resource-constrained systems.
 
 **Speed**&ensp;
-According to benchmarks performed on consumer-grade hardware, task switching with coroutines is 30-45 times faster than kernel task switches (we measured 6MHz and 9MHz [thread-safe and unsafe versions] for coroutines, and around 200kHz on kernel task switches on the same machine).
+According to benchmarks performed on consumer-grade hardware, task switching with coroutines is 30-45 times faster than kernel task switches when running in a single thread (we measured 6MHz and 9MHz [thread-safe and unsafe versions] for coroutines, and around 200kHz for kernel task switches [thread synchronisations] on the same machine).
+Since coroutines can run in multiple threads, this advantage in speed scales with the number of cores.
 
 **Thread-safe**&ensp;
 The library is thread-safe; While coroutines are usually implemented for single-threaded contexts, libcr allows true M:N threading.
