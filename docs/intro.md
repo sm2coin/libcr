@@ -36,6 +36,10 @@ CR_STATE
    multiple possible parameter sets. Even if your coroutine
    takes no arguments, you need to implement this function. */
 	void cr_prepare(int limit) { this->limit = limit; }
+/* This function is called by libcr when the coroutine
+   finishes its execution, just before returning. It should
+   release all resources held by the coroutine. */
+	void cr_destroy() {}
 /* CR_INLINE allows us to implement the coroutine directly in
    its declaration. */
 CR_INLINE
@@ -106,6 +110,7 @@ CR_STATE
 		this->destination = (char *)destination;
 		this->size = size;
 	}
+	void cr_destroy() {}
 CR_INLINE
 	while(size)
 	{
@@ -149,6 +154,7 @@ CR_STATE
 	{
 		this->connection = connection;
 	}
+	void cr_destroy() {}
 CR_INLINE
 /* This macro calls a coroutine in a syntax that resembles a
    normal function call. Note that no additional first
@@ -207,6 +213,7 @@ CR_STATE
 		this->y = y;
 		this->z = z;
 	}
+	void cr_destroy() {}
 /* This macro marks the coroutine implementation as external,
    just like it is done in classes. */
 CR_EXTERNAL
