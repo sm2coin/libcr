@@ -54,4 +54,29 @@ namespace cr
 		else
 			return nullptr;
 	}
+
+	void Coroutine::release()
+	{
+		libcr_next_waiting.store(this, std::memory_order_release);
+	}
+
+	void Coroutine::set_next_waiting(
+		Coroutine * coroutine)
+	{
+		// Use RMW to keep the release sequence intact.
+		[[maybe_unused]] Coroutine * waiting = libcr_next_waiting.exchange(
+			coroutine,
+			std::memory_order_relaxed);
+		assert(!waiting || waiting == this);
+	}
+
+	Coroutine * Coroutine::acquire()
+	{
+		Coroutine * next = libcr_next_waiting.exchange(nullptr, std::memory_order_acquire);
+		assert(next != nullptr && "acquired unreleased coroutine!");
+		if(next != this)
+			return next;
+		else
+			return nullptr;
+	}
 }

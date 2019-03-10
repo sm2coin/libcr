@@ -15,13 +15,13 @@ namespace cr::mt
 	{
 		assert(coroutine != nullptr);
 
-		// Pause the coroutine.
-		coroutine->pause(); // Release operation.
+		coroutine->release();
 
 		// Make the coroutine the last coroutine.
+		// Release ordering because this must not be reordered before the releasing of the coroutine.
 		Coroutine * last = m_cv.m_last_waiting.exchange(
 			coroutine,
-			std::memory_order_relaxed);
+			std::memory_order_release);
 
 		// `last` is now the previously last coroutine.
 		// `last` can only be null for the coroutine that comes first.
@@ -31,19 +31,13 @@ namespace cr::mt
 			// `last` cannot be removed until it is successfully linked to the next coroutine, because it is no longer the last coroutine.
 
 			// Set the coroutine to be the next waiting of last.
-			// Keep the previous coroutine's release sequence intact (RMW).
-			[[maybe_unused]] Coroutine * check = last->libcr_next_waiting.exchange(
-				coroutine,
-				std::memory_order_relaxed);
-
-			// The coroutine must have been waiting.
-			assert(check == last);
+			last->set_next_waiting(coroutine);
 		} else
 		{
 			// The condition variable was previously empty, so register the condition variable as first.
-
 			assert(!m_cv.m_first_waiting.load(std::memory_order_relaxed));
 
+			// Relaxed is sufficient, as no reordering can occur.
 			m_cv.m_first_waiting.store(coroutine, std::memory_order_relaxed);
 		}
 
@@ -56,7 +50,6 @@ namespace cr::mt
 
 		if(removed)
 		{
-			resume_and_wait_for_completion(removed, removed);
 			(*removed)();
 			return true;
 		} else {
@@ -70,7 +63,6 @@ namespace cr::mt
 
 		if(removed)
 		{
-			resume_and_wait_for_completion(removed, removed);
 			removed->libcr_error = true;
 			(*removed)();
 			return true;
@@ -91,8 +83,8 @@ namespace cr::mt
 
 		// No other coroutines can be removed until first is set again.
 
-		// Get the first coroutine's successor.
-		Coroutine * next = first->next_waiting();
+		// Acquire the coroutine's state and get its successor.
+		Coroutine * next = first->acquire();
 
 		if(!next)
 		{
@@ -105,11 +97,15 @@ namespace cr::mt
 				std::memory_order_relaxed))
 			{
 				return first;
+			} else
+			{
+				// There was a new coroutine added.
+				// Wait until it sets this coroutine's next pointer.
+				while(!(next = first->libcr_next_waiting.exchange(
+					nullptr,
+					std::memory_order_relaxed)));
 			}
 		}
-
-		while(!next)
-			next = first->next_waiting();
 
 		assert(!m_first_waiting.load(std::memory_order_relaxed));
 		// We have a successor, set it as first.
@@ -127,9 +123,9 @@ namespace cr::mt
 			return false;
 
 		// Notify the removed coroutines.
-		Coroutine * next = first;
+		Coroutine * next;
 		do {
-			next = resume_and_wait_for_completion(first, last);
+			next = acquire_and_complete(first, last);
 
 			// Notify the coroutine.
 			(*first)();
@@ -148,9 +144,9 @@ namespace cr::mt
 			return false;
 
 		// Notify the removed coroutines.
-		Coroutine * next = first;
+		Coroutine * next;
 		do {
-			next = resume_and_wait_for_completion(first, last);
+			next = acquire_and_complete(first, last);
 
 			first->libcr_error = true;
 			// Notify the coroutine.
@@ -195,21 +191,27 @@ namespace cr::mt
 		return true;
 	}
 
-	Coroutine * PODFIFOConditionVariable::resume_and_wait_for_completion(
+	Coroutine * PODFIFOConditionVariable::acquire_and_complete(
 		Coroutine * coroutine,
 		Coroutine * last)
 	{
-		Coroutine * next;
+		// Does this coroutine have a successor?
 		if(coroutine != last)
 		{
-			// Wait until the coroutine has a next in line.
-			while(!(next = coroutine->next_waiting()));
-		} else next = coroutine->next_waiting();
+			// Acquire the coroutine.
+			Coroutine * next = coroutine->acquire();
+			if(!next)
+				// Wait until the coroutine has a next in line.
+				while(!(next = coroutine->libcr_next_waiting.load(std::memory_order_relaxed)));
+			// Return the next coroutine.
+			return next;
+		} else
+		{
+			// Acquire the coroutine, ignore the next in line.
+			coroutine->acquire();
+			return nullptr;
+		}
 
-		// Acquire the coroutine's state.
-		coroutine->resume();
-
-		return next;
 	}
 
 	FIFOConditionVariable::FIFOConditionVariable()
@@ -233,13 +235,10 @@ namespace cr::mt
 	{
 		assert(coroutine != nullptr);
 
-		// Pause the coroutine.
-		coroutine->pause();
-
 		Coroutine * first = m_cv.m_waiting.load(std::memory_order_relaxed);
 		// Make the coroutine the first coroutine.
 		do {
-			// Set the next coroutine to be the first coroutine (if exists).
+			// Release the coroutine and set its successor to be the first waiting coroutine.
 			if(first)
 				coroutine->libcr_next_waiting.store(first, std::memory_order_release);
 			else
@@ -258,8 +257,6 @@ namespace cr::mt
 		Coroutine * removed = remove_one();
 		if(removed)
 		{
-			// Resume the removed coroutine.
-			resume_and_wait_for_completion(removed, removed);
 			// Notify the first removed coroutine.
 			(*removed)();
 
@@ -273,8 +270,6 @@ namespace cr::mt
 		Coroutine * removed = remove_one();
 		if(removed)
 		{
-			// Resume the removed coroutine.
-			resume_and_wait_for_completion(removed, removed);
 			removed->libcr_error = true;
 			// Notify the first removed coroutine.
 			(*removed)();
@@ -296,23 +291,11 @@ namespace cr::mt
 		if(!removed)
 			return nullptr;
 
-		// Get next waiting coroutine.
-		Coroutine * removed_next = removed;
-		// `compare_exchange_weak` is used for stronger synchronisation than `load`.
-		while(!removed->libcr_next_waiting.compare_exchange_weak(
-			removed_next,
-			removed_next,
-			std::memory_order_relaxed))
-		{
-			// Keep sanity: Coroutine must be waiting.
-			if(!removed_next)
-				removed_next = removed;
-		}
-
-		assert(removed_next != nullptr);
+		// Acquire the coroutine and get next waiting coroutine.
+		Coroutine * removed_next = removed->acquire();
 
 		// Are there coroutines to add back?
-		if(removed_next != removed)
+		if(removed_next)
 		{
 			// Remember for later.
 			Coroutine * first = nullptr;
@@ -329,17 +312,20 @@ namespace cr::mt
 				Coroutine * tail_next;
 				for(;;)
 				{
-					// Wait until the coroutine is visible.
-					while(!tail->waiting());
+					// Get the next coroutine. CAS for strong fetch.
+					tail->libcr_next_waiting.compare_exchange_strong(
+						tail_next,
+						tail_next,
+						std::memory_order_relaxed);
+					assert(tail_next != nullptr);
 					// Is there a next coroutine waiting?
-					if((tail_next = tail->next_waiting()))
+					if(tail_next != tail)
 						tail = tail_next;
 					else break;
 				}
 
 				// Try to add the last removed coroutine to the queue.
-				first = m_waiting.load(std::memory_order_relaxed);
-				// Make the second removed coroutine the first coroutine.
+				// Make the last removed coroutine the first coroutine.
 				do {
 					// RMW operation to keep release sequence intact.
 					// Set the next coroutine to be the first coroutine (if exists).
@@ -373,7 +359,7 @@ namespace cr::mt
 		Coroutine * next;
 		do {
 			// Resume the coroutine and get the next in line.
-			next = resume_and_wait_for_completion(first, nullptr);
+			next = acquire_and_complete(first, nullptr);
 			// notify the coroutine.
 			(*first)();
 
@@ -397,7 +383,7 @@ namespace cr::mt
 		Coroutine * next;
 		do {
 			// Resume the coroutine and get the next in line.
-			next = resume_and_wait_for_completion(first, nullptr);
+			next = acquire_and_complete(first, nullptr);
 			first->libcr_error = true;
 			// notify the coroutine.
 			(*first)();
@@ -422,20 +408,12 @@ namespace cr::mt
 		return true;
 	}
 
-	Coroutine * PODConditionVariable::resume_and_wait_for_completion(
+	Coroutine * PODConditionVariable::acquire_and_complete(
 		Coroutine * coroutine,
 		Coroutine *)
 	{
 		assert(coroutine != nullptr);
-		Coroutine * next = coroutine->libcr_next_waiting.exchange(
-			nullptr,
-			std::memory_order_acquire);
-		// Sanity check: `next` must be `coroutine` or some other non-null pointer.
-		assert(next != nullptr);
-		if(next == coroutine)
-			return nullptr;
-		else
-			return next;
+		return coroutine->acquire();
 	}
 
 	ConditionVariable::ConditionVariable()

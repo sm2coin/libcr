@@ -61,7 +61,6 @@
 	if(::cr::sync::block() == ::cr::Coroutine::libcr_unpack_wait(operation)) \
 		return; \
 	LIBCR_HELPER_LABEL(id):; \
-	assert(!cr::Coroutine::waiting() && "Illegal coroutine invocation."); \
 	if(::cr::Coroutine::libcr_error) \
 	{ \
 		::cr::Coroutine::libcr_error = false; \
@@ -133,7 +132,6 @@
 	LIBCR_HELPER_ASSERT_COROUTINE("CR_HELPER_CALL_SUFFIX", decltype(coroutine)); \
 	return; \
 	LIBCR_HELPER_LABEL(id):; \
-	assert(!cr::Coroutine::waiting() && "Illegal coroutine invocation."); \
 	if(::cr::Coroutine::libcr_error) \
 	{ \
 		::cr::Coroutine::libcr_error = false; \

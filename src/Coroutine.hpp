@@ -99,13 +99,20 @@ namespace cr
 		/** The next coroutine waiting, or null. */
 		inline Coroutine * next_waiting() const;
 
-		/** Sets a coroutine to be waiting.
-			The coroutine must not be waiting already. */
-		void pause();
+		/** Releases a coroutine's state for passing it to other threads.
+			The coroutine must not be released already. This should be paired with a call to `acquire()`. */
+		inline void release();
 
-		/** Marks a waiting coroutine as no longer waiting.
-			The coroutine must be waiting. Does not execute the coroutine. */
-		void resume();
+		/** Sets the next waiting coroutine.
+			No successor must have been set yet. */
+		inline void set_next_waiting(
+			Coroutine * coroutine);
+
+		/** Acquires a coroutine's state from another thread.
+			The coroutine must have been released previously.
+		@return
+			The next waiting coroutine, if any. */
+		inline Coroutine * acquire();
 	};
 }
 

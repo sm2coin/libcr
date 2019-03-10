@@ -119,7 +119,7 @@ namespace cr::mt
 			} else
 			{
 				lock.unlock();
-				m_cv.resume_and_wait_for_completion(removed, removed);
+				m_cv.acquire_and_complete(removed, removed);
 				(*removed)();
 				return;
 			}

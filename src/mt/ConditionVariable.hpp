@@ -67,9 +67,7 @@ namespace cr::mt
 		bool fail_one();
 
 		/** Removes the first waiting coroutine, if exists.
-			Removes the first coroutine from the waiting queue.
-			`resume_and_wait_for_completion()` needs to be called on the removed coroutine before accessing it.
-			The coroutine is not resumed.
+			Removes the first coroutine from the waiting queue. The coroutine is acquired automatically, but not executed.
 		@return
 			The removed coroutine, or null. */
 		Coroutine * remove_one();
@@ -87,8 +85,7 @@ namespace cr::mt
 		bool fail_all();
 
 		/** Removes the all waiting coroutines from the waiting queue.
-			`resume_and_wait_for_completion()` needs to be called on all removed coroutines before accessing them.
-			No coroutine is resumed.
+			`acquire_and_complete()` needs to be called on all removed coroutines before accessing them. No coroutine is acquired or executed.
 		@param[out] first:
 			The first removed coroutine.
 		@param[out] last:
@@ -99,15 +96,15 @@ namespace cr::mt
 			Coroutine * &first,
 			Coroutine * &last);
 
-		/** Resumes a removed coroutine and waits until it is safe to access.
-			This does not execute a removed coroutine.
+		/** Acquires a removed coroutine and waits until it is safe to access.
+			This does not execute a removed coroutine. Only necessary in combination with `remove_all()`.
 		@param[in] coroutine:
-			The coroutine to resume.
+			The coroutine to acquire.
 		@param[in] last:
 			The last removed coroutine.
 		@return
 			The next waiting coroutine, or null. */
-		static Coroutine * resume_and_wait_for_completion(
+		static Coroutine * acquire_and_complete(
 			Coroutine * coroutine,
 			Coroutine * last);
 	};
@@ -176,9 +173,7 @@ namespace cr::mt
 		bool fail_one();
 
 		/** Removes the first waiting coroutine, if exists.
-			Removes the first coroutine from the waiting queue.
-			`resume_and_wait_for_completion()` needs to be called on the removed coroutine before accessing it.
-			The coroutine is not resumed.
+			Removes the first coroutine from the waiting queue. The coroutine is acquired automatically, but not executed.
 		@return
 			The removed coroutine, or null. */
 		Coroutine * remove_one();
@@ -196,8 +191,7 @@ namespace cr::mt
 		bool fail_all();
 
 		/** Removes the all waiting coroutines from the waiting queue.
-			`resume_and_wait_for_completion()` needs to be called on all removed coroutines before accessing them.
-			No coroutine is resumed.
+			`resume_and_wait_for_completion()` needs to be called on all removed coroutines before accessing them. No coroutine is acquired or executed.
 		@param[out] first:
 			The first removed coroutine.
 		@param[out] last:
@@ -208,7 +202,7 @@ namespace cr::mt
 			Coroutine * &first,
 			Coroutine * &last);
 
-		/** Resumes a removed coroutine.
+		/** Acquires a removed coroutine and waits until it is safe to access.
 			This does not execute a removed coroutine.
 		@param[in] coroutine:
 			The coroutine to resume.
@@ -216,7 +210,7 @@ namespace cr::mt
 			Dummy parameter, for compatibility with the FIFO version.
 		@return
 			The next coroutine, or null. */
-		static Coroutine * resume_and_wait_for_completion(
+		static Coroutine * acquire_and_complete(
 			Coroutine * coroutine,
 			Coroutine * ignored);
 	};

@@ -15,16 +15,15 @@ namespace cr::sync
 		Coroutine * coroutine)
 	{
 		assert(coroutine != nullptr);
-		assert(!coroutine->waiting());
 
-		coroutine->pause();
+		coroutine->libcr_next_waiting.store(coroutine, std::memory_order_relaxed);
 
 		if(!m_cv.m_first_waiting)
 		{
 			m_cv.m_first_waiting = coroutine;
 		} else
 		{
-			m_cv.m_last_waiting->libcr_next_waiting = coroutine;
+			m_cv.m_last_waiting->libcr_next_waiting.store(coroutine, std::memory_order_relaxed);
 		}
 
 		m_cv.m_last_waiting = coroutine;
@@ -46,8 +45,8 @@ namespace cr::sync
 		}
 
 		m_first_waiting = first->next_waiting();
+		first->libcr_next_waiting.store(nullptr, std::memory_order_relaxed);
 
-		first->resume();
 		(*first)();
 
 		return true;
@@ -61,14 +60,10 @@ namespace cr::sync
 		Coroutine * first = m_first_waiting;
 
 		if(m_first_waiting == m_last_waiting)
-		{
-			assert(!m_first_waiting->next_waiting());
 			m_last_waiting = nullptr;
-		}
 
 		m_first_waiting = first->next_waiting();
 
-		first->resume();
 		first->libcr_error = true;
 		(*first)();
 
@@ -88,7 +83,6 @@ namespace cr::sync
 		{
 			Coroutine * next = coroutine->next_waiting();
 
-			coroutine->resume();
 			(*coroutine)();
 
 			coroutine = next;
@@ -110,7 +104,6 @@ namespace cr::sync
 		{
 			Coroutine * next = coroutine->next_waiting();
 
-			coroutine->resume();
 			coroutine->libcr_error = true;
 			(*coroutine)();
 
@@ -142,11 +135,7 @@ namespace cr::sync
 		assert(coroutine != nullptr);
 		assert(!coroutine->waiting());
 
-		if(m_cv.m_waiting)
-			coroutine->libcr_next_waiting.store(m_cv.m_waiting, std::memory_order_relaxed);
-		else
-			coroutine->pause();
-
+		coroutine->libcr_next_waiting.store(coroutine, std::memory_order_relaxed);
 		m_cv.m_waiting = coroutine;
 
 		return block();
@@ -159,7 +148,6 @@ namespace cr::sync
 
 		Coroutine * first = m_waiting;
 		m_waiting = first->next_waiting();
-		first->resume();
 		(*first)();
 
 		return true;
@@ -172,7 +160,7 @@ namespace cr::sync
 
 		Coroutine * first = m_waiting;
 		m_waiting = first->next_waiting();
-		first->resume();
+
 		first->libcr_error = true;
 		(*first)();
 
@@ -191,7 +179,6 @@ namespace cr::sync
 		{
 			Coroutine * next = coroutine->next_waiting();
 
-			coroutine->resume();
 			(*coroutine)();
 
 			coroutine = next;
@@ -212,7 +199,6 @@ namespace cr::sync
 		{
 			Coroutine * next = coroutine->next_waiting();
 
-			coroutine->resume();
 			coroutine->libcr_error = true;
 			(*coroutine)();
 
