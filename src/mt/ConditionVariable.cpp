@@ -315,9 +315,8 @@ namespace cr::mt
 					tail_next = tail->libcr_next_waiting.atomic.load_strong(
 						std::memory_order_relaxed);
 
-					assert(tail_next != nullptr);
 					// Is there a next coroutine waiting?
-					if(tail_next != tail)
+					if(tail_next)
 						tail = tail_next;
 					else break;
 				}
