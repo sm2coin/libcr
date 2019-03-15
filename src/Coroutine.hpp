@@ -5,6 +5,7 @@
 
 #include "Context.hpp"
 #include "Protothread.hpp"
+#include "detail/NextPointer.hpp"
 
 #include <atomic>
 #include <cstddef>
@@ -30,8 +31,8 @@ namespace cr
 		impl_t libcr_coroutine;
 		/** Error flag that can be set when a blocking operation fails. */
 		bool libcr_error;
-		/** When waiting for a resource, the next coroutine in line, or self if last. */
-		std::atomic<Coroutine *> libcr_next_waiting;
+		/** When waiting for a resource, the next coroutine in line, or null if last. */
+		detail::NextPointer libcr_next_waiting;
 
 		/** Prepares the coroutine to be the root coroutine.
 		@param[in] coroutine:
@@ -91,28 +92,6 @@ namespace cr
 			Whether the coroutine does not need to wait. */
 		inline bool libcr_unpack_wait(
 			bool value);
-
-
-		/** Whether a coroutine is waiting. */
-		inline bool waiting() const;
-
-		/** The next coroutine waiting, or null. */
-		inline Coroutine * next_waiting() const;
-
-		/** Releases a coroutine's state for passing it to other threads.
-			The coroutine must not be released already. This should be paired with a call to `acquire()`. */
-		inline void release();
-
-		/** Sets the next waiting coroutine.
-			No successor must have been set yet. */
-		inline void set_next_waiting(
-			Coroutine * coroutine);
-
-		/** Acquires a coroutine's state from another thread.
-			The coroutine must have been released previously.
-		@return
-			The next waiting coroutine, if any. */
-		inline Coroutine * acquire();
 	};
 }
 

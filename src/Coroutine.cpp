@@ -11,7 +11,7 @@ namespace cr
 		libcr_context = context;
 		libcr_coroutine = coroutine;
 		libcr_error = false;
-		std::atomic_init(&libcr_next_waiting, (Coroutine *)nullptr);
+		// Leave libcr_next_waiting uninitialised!
 	}
 
 	void Coroutine::prepare(
@@ -23,6 +23,6 @@ namespace cr
 		libcr_context = parent->libcr_context;
 		libcr_coroutine = coroutine;
 		libcr_error = false;
-		std::atomic_init(&libcr_next_waiting, (Coroutine *)nullptr);
+		// Leave libcr_next_waiting uninitialised!
 	}
 }

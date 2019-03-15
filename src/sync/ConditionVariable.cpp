@@ -16,14 +16,14 @@ namespace cr::sync
 	{
 		assert(coroutine != nullptr);
 
-		coroutine->libcr_next_waiting.store(coroutine, std::memory_order_relaxed);
+		coroutine->libcr_next_waiting.plain = nullptr;
 
 		if(!m_cv.m_first_waiting)
 		{
 			m_cv.m_first_waiting = coroutine;
 		} else
 		{
-			m_cv.m_last_waiting->libcr_next_waiting.store(coroutine, std::memory_order_relaxed);
+			m_cv.m_last_waiting->libcr_next_waiting.plain = coroutine;
 		}
 
 		m_cv.m_last_waiting = coroutine;
@@ -40,12 +40,12 @@ namespace cr::sync
 
 		if(m_first_waiting == m_last_waiting)
 		{
-			assert(!m_first_waiting->next_waiting());
+			assert(!m_first_waiting->libcr_next_waiting.plain);
 			m_last_waiting = nullptr;
 		}
 
-		m_first_waiting = first->next_waiting();
-		first->libcr_next_waiting.store(nullptr, std::memory_order_relaxed);
+		m_first_waiting = first->libcr_next_waiting.plain;
+		first->libcr_next_waiting.plain = nullptr;
 
 		(*first)();
 
@@ -62,7 +62,7 @@ namespace cr::sync
 		if(m_first_waiting == m_last_waiting)
 			m_last_waiting = nullptr;
 
-		m_first_waiting = first->next_waiting();
+		m_first_waiting = first->libcr_next_waiting.plain;
 
 		first->libcr_error = true;
 		(*first)();
@@ -81,7 +81,7 @@ namespace cr::sync
 
 		while(coroutine)
 		{
-			Coroutine * next = coroutine->next_waiting();
+			Coroutine * next = coroutine->libcr_next_waiting.plain;
 
 			(*coroutine)();
 
@@ -102,7 +102,7 @@ namespace cr::sync
 
 		while(coroutine)
 		{
-			Coroutine * next = coroutine->next_waiting();
+			Coroutine * next = coroutine->libcr_next_waiting.plain;
 
 			coroutine->libcr_error = true;
 			(*coroutine)();
@@ -133,9 +133,8 @@ namespace cr::sync
 		Coroutine * coroutine)
 	{
 		assert(coroutine != nullptr);
-		assert(!coroutine->waiting());
 
-		coroutine->libcr_next_waiting.store(coroutine, std::memory_order_relaxed);
+		coroutine->libcr_next_waiting.plain = coroutine;
 		m_cv.m_waiting = coroutine;
 
 		return block();
@@ -147,7 +146,7 @@ namespace cr::sync
 			return false;
 
 		Coroutine * first = m_waiting;
-		m_waiting = first->next_waiting();
+		m_waiting = first->libcr_next_waiting.plain;
 		(*first)();
 
 		return true;
@@ -159,7 +158,7 @@ namespace cr::sync
 			return false;
 
 		Coroutine * first = m_waiting;
-		m_waiting = first->next_waiting();
+		m_waiting = first->libcr_next_waiting.plain;
 
 		first->libcr_error = true;
 		(*first)();
@@ -177,7 +176,7 @@ namespace cr::sync
 
 		while(coroutine)
 		{
-			Coroutine * next = coroutine->next_waiting();
+			Coroutine * next = coroutine->libcr_next_waiting.plain;
 
 			(*coroutine)();
 
@@ -197,7 +196,7 @@ namespace cr::sync
 
 		while(coroutine)
 		{
-			Coroutine * next = coroutine->next_waiting();
+			Coroutine * next = coroutine->libcr_next_waiting.plain;
 
 			coroutine->libcr_error = true;
 			(*coroutine)();
