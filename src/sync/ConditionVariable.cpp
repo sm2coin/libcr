@@ -134,7 +134,7 @@ namespace cr::sync
 	{
 		assert(coroutine != nullptr);
 
-		coroutine->libcr_next_waiting.plain = coroutine;
+		coroutine->libcr_next_waiting.plain = m_cv.m_waiting;
 		m_cv.m_waiting = coroutine;
 
 		return block();
