@@ -5,6 +5,7 @@
 
 #include "ConditionVariable.hpp"
 #include "detail/SoftMutex.hpp"
+#include "../util/Atomic.hpp"
 
 namespace cr::mt
 {
@@ -23,7 +24,7 @@ namespace cr::mt
 		/** Whether the event happened. */
 		std::atomic_bool m_active;
 		/** Number of currently registering coroutines. */
-		std::atomic_size_t m_registering;
+		util::Atomic<std::size_t> m_registering;
 		/** Userspace mutex. */
 		detail::PODSoftMutex m_mutex;
 	public:
@@ -79,7 +80,7 @@ namespace cr::mt
 		using PODEventBase<ConditionVariable>::fire;
 		using PODEventBase<ConditionVariable>::clear;
 		using PODEventBase<ConditionVariable>::wait;
-		using PODEventBase<ConditionVariable>::happened;
+		using PODEventBase<ConditionVariable>::active;
 
 		/** Initialises the event. */
 		EventBase();
@@ -140,7 +141,7 @@ namespace cr::mt
 		using PODConsumableEventBase<ConditionVariable>::fire;
 		using PODConsumableEventBase<ConditionVariable>::clear;
 		using PODConsumableEventBase<ConditionVariable>::consume;
-		using PODConsumableEventBase<ConditionVariable>::happened;
+		using PODConsumableEventBase<ConditionVariable>::active;
 
 		/** Initialises the event. */
 		ConsumableEventBase();

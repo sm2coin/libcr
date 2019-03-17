@@ -28,6 +28,7 @@ namespace cr::mt::detail
 	{
 		assert(m_mutex != nullptr);
 		m_mutex->unlock();
+		m_mutex = nullptr;
 	}
 
 	void LockGuard::lock(

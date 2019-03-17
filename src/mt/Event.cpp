@@ -16,22 +16,20 @@ namespace cr::mt
 	template<class ConditionVariable>
 	void PODEventBase<ConditionVariable>::fire()
 	{
-		// `fetch_or` is used to enforce stronger synchronisation than `load`.
-		// `exchange` is used to enforce stronger synchronisation than `store`.
 		for(;;)
 		{
 			// If there are registering coroutines, try again.
-			if(m_registering.fetch_or(0, std::memory_order_relaxed))
+			if(m_registering.load_strong(std::memory_order_relaxed))
 				continue;
 
 			// Otherwise, lock the event.
 			detail::LockGuard lock { m_mutex };
 			// If there are registering coroutines, try again.
-			if(m_registering.fetch_or(0, std::memory_order_relaxed))
+			if(m_registering.load_strong(std::memory_order_relaxed))
 				continue;
 
 			// Otherwise, set the event to active.
-			m_active.exchange(true, std::memory_order_release);
+			m_active.store(true, std::memory_order_release);
 			break;
 		}
 
@@ -41,8 +39,7 @@ namespace cr::mt
 	template<class ConditionVariable>
 	void PODEventBase<ConditionVariable>::clear()
 	{
-		// `exchange` is used to enforce stronger synchronisation than `store`.
-		m_active.exchange(false, std::memory_order_relaxed);
+		m_active.store(false, std::memory_order_relaxed);
 	}
 
 	template<class ConditionVariable>
@@ -75,14 +72,15 @@ namespace cr::mt
 
 		// Increment the registering count.
 		m_event.m_registering.fetch_add(1, std::memory_order_relaxed);
+
 		// Unlock the event.
 		lock.unlock();
 
 		// Register the coroutine.
 		coroutine->libcr_unpack_wait(m_event.m_cv.wait());
-
 		// Decrement the registering count.
-		m_event.m_registering.fetch_sub(1, std::memory_order_relaxed);
+		// Release because the operation must not be reordered.
+		m_event.m_registering.fetch_sub(1, std::memory_order_release);
 		return sync::block();
 	}
 
@@ -98,12 +96,10 @@ namespace cr::mt
 		if(m_cv.notify_one())
 			return;
 
-		// `fetch_or` is used to enforce stronger synchronisation than `load`.
-		// `exchange` is used to enforce stronger synchronisation than `store`.
 		do
 		{
 			// If there are registering coroutines, try again.
-			if(m_registering.fetch_or(0, std::memory_order_relaxed))
+			if(m_registering.load_strong(std::memory_order_relaxed))
 				continue;
 
 			// Otherwise, lock the event.
@@ -114,7 +110,7 @@ namespace cr::mt
 			if(!removed)
 			{
 				// If there are registering coroutines, try again.
-				if(m_registering.fetch_or(0, std::memory_order_relaxed))
+				if(m_registering.load_strong(std::memory_order_relaxed))
 					continue;
 			} else
 			{
@@ -155,7 +151,8 @@ namespace cr::mt
 		(void) m_event.m_cv.wait().libcr_wait(coroutine);
 
 		// Decrement the registering count.
-		m_event.m_registering.fetch_sub(1, std::memory_order_relaxed);
+		// Release, because the operation must not be reordered.
+		m_event.m_registering.fetch_sub(1, std::memory_order_release);
 		return sync::block();
 	}
 
@@ -180,4 +177,9 @@ namespace cr::mt
 	template class PODEventBase<PODFIFOConditionVariable>;
 	template class PODConsumableEventBase<PODConditionVariable>;
 	template class PODConsumableEventBase<PODFIFOConditionVariable>;
+
+	template class EventBase<PODConditionVariable>;
+	template class EventBase<PODFIFOConditionVariable>;
+	template class ConsumableEventBase<PODConditionVariable>;
+	template class ConsumableEventBase<PODFIFOConditionVariable>;
 }
