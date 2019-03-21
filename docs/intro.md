@@ -26,16 +26,13 @@ COROUTINE(ACoroutine, SchedulerType)
 
 
 /* Everything after this is part of the Coroutine's internal
-   state (its local variables and parameters). */
-CR_STATE
+   state (its local variables and parameters). Inside the
+   parentheses, the coroutine's arguments are listed. Note
+   that the argument types have to be surrounded with
+   parentheses. */
+CR_STATE((int) limit)
 	int i;
-	int limit;
 
-/* This function is called by libcr, and is used to receive
-   the function's parameters. You can overload this to create
-   multiple possible parameter sets. Even if your coroutine
-   takes no arguments, you need to implement this function. */
-	void cr_prepare(int limit) { this->limit = limit; }
 /* This function is called by libcr when the coroutine
    finishes its execution, just before returning. It should
    release all resources held by the coroutine. */
@@ -43,7 +40,7 @@ CR_STATE
 /* CR_INLINE allows us to implement the coroutine directly in
    its declaration. */
 CR_INLINE
-	for(i = 0; i < 10; i++)
+	for(i = 0; i < limit; i++)
 	{
 		std::cout << i << "\n";
 /* CR_YIELD yields the execution, which is resumed the next
@@ -96,20 +93,11 @@ This is done as follows:
 
 ~~~cpp
 COROUTINE(Receive, void)
-CR_STATE
-	Connection * connection;
-	char * destination;
-	std::size_t size;
+CR_STATE(
+	(Connection *) connection,
+	(void *) destination,
+	(std::size_t) size)
 
-	void cr_prepare(
-		Connection * connection,
-		void * destination,
-		std::size_t size)
-	{
-		this->connection = connection;
-		this->destination = (char *)destination;
-		this->size = size;
-	}
 	void cr_destroy() {}
 CR_INLINE
 	while(size)
@@ -129,8 +117,8 @@ CR_INLINE
 /* Local variables are only allowed if their lifetime does
    not contain any CR_AWAIT, CR_CALL, or CR_YIELD statements.
    This reduces the size of the coroutine's state. */
-		std::size_t received = connection->recv(destination, size);
-		destination += received;
+		std::size_t received = connection->recv((char*)destination, size);
+		reinterpret_cast<char *&>(destination) += received;
 		size -= received;
 	}
 CR_INLINE_END
@@ -139,7 +127,7 @@ COROUTINE(GetMessage, void)
 /* These are publicly visible. */
 	bool success;
 	char message[256];
-CR_STATE
+CR_STATE((Connection *) connection)
 /* Instead of dynamically allocating other coroutines, for
    fixed nesting depth, they can simply be included directly
    into the coroutine's state. As coroutines are POD by
@@ -147,13 +135,6 @@ CR_STATE
    coroutines that are invoked sequentially take up less
    space. */
 	Receive receive;
-	Connection * connection;
-
-	void cr_prepare(
-		Connection * connection)
-	{
-		this->connection = connection;
-	}
 	void cr_destroy() {}
 CR_INLINE
 /* This macro calls a coroutine in a syntax that resembles a
@@ -205,14 +186,11 @@ For this reason, coroutine implementations can be made external:
 ~~~cpp
 COROUTINE(Something, void)
 
-CR_STATE
-	int x, y, z;
-	int cr_prepare(int x, int y, int z)
-	{
-		this->x = x;
-		this->y = y;
-		this->z = z;
-	}
+CR_STATE(
+	(int) x,
+	(int) y,
+	(int) z)
+	
 	void cr_destroy() {}
 /* This macro marks the coroutine implementation as external,
    just like it is done in classes. */

@@ -16,7 +16,7 @@ namespace cr::util
 		/** Allows access to the inner coroutine.
 			Note that after the coroutine returns, it is deleted. */
 		inline Coroutine &operator*();
-	CR_STATE
+	CR_STATE_NOAUTO
 		Coroutine coroutine;
 
 		template<class ...Args>

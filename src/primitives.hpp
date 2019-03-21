@@ -368,14 +368,26 @@ public: \
 	using LibCrBase::prepare;
 
 
-/** @def CR_STATE
+/** @def CR_STATE(args)
+	Starts the internal / state variable section of a coroutine. Automatically generates the arguments and a cr_prepare function that takes the arguments. The arguments have to be of the form `(type) name`. If no automatically generated prepare function is desired, use `#CR_STATE_NOAUTO`. */
+#define CR_STATE(...) \
+private: \
+	LIBCR_HELPER_CREATE_PREPARE(__VA_ARGS__)
+
+/** @def CR_STATE_NOAUTO
 	Starts the internal / state variable section of a coroutine. */
-#define CR_STATE \
+#define CR_STATE_NOAUTO \
 private:
 
-/** @def PT_STATE
+/** @def PT_STATE(args)
+	Starts the internal / state variable section of a protothread. Automatically generates the arguments and a cr_prepare function that takes the arguments. The arguments have to be of the form `(type) name`. If no automatically generated prepare function is desired, use `#PT_STATE_NOAUTO`. */
+#define PT_STATE(...) \
+private: \
+	LIBCR_HELPER_CREATE_PREPARE(__VA_ARGS__)
+
+/** @def CR_STATE_NOAUTO
 	Starts the internal / state variable section of a protothread. */
-#define PT_STATE \
+#define PT_STATE_NOAUTO \
 private:
 
 #endif
