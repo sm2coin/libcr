@@ -30,25 +30,26 @@ This means that everything is designed with minimum memory usage and maximum eff
 ### 1.1. Technical
 
 **Lightweight**&ensp;
-A single coroutine takes up 56 bytes (on a 64-bit platform, in release mode) of memory, and task switches are at least 30 times faster than kernel threads.
+A single coroutine takes up 56 bytes (on a 64-bit platform, in release mode) of memory, and task switches are much cheaper than kernel thread task switches.
 This allows for (more or less) massive parallelism even on resource-constrained systems.
 
-**Speed**&ensp;
-According to benchmarks performed on consumer-grade hardware, task switching with coroutines is 30-45 times faster than kernel task switches when running in a single thread (we measured 6MHz and 9MHz [thread-safe and unsafe versions] for coroutines, and around 200kHz for kernel task switches [thread synchronisations] on the same machine).
-Since coroutines can run in multiple threads, this advantage in speed scales with the number of cores.
-
 **Thread-safe**&ensp;
-The library is thread-safe; While coroutines are usually implemented for single-threaded contexts, libcr allows true M:N threading.
+The library is thread-safe; While coroutines are usually implemented for single-threaded contexts, libcr allows true [M:N threading](https://en.wikipedia.org/wiki/Thread_(computing)#M:N_.28hybrid_threading.29).
 Coroutines can be passed between threads without any issues.
 This means that even greater multitasking can be achieved when using libcr with real threads.
 Of course, libcr also has a thread-unsafe implementation for even faster task switching on single-threaded systems or when it is clear that every coroutine will stay in the thread it was created in.
+
+**Speed**&ensp;
+According to benchmarks performed on an Intel(R) Core(TM) i7-8700 CPU (3.20GHz), task switching with coroutines is around 125 times faster than kernel task switches when running in a single thread (we measured 50MHz [20ns] for thread-unsafe task switches for coroutines, and around 400kHz (2.5µs) for kernel task switches [thread synchronisations] on the same machine).
+We also measured 17MHz (59ns) for thread-safe coroutine context switches in a single thread on the same machine.
+Since coroutines can run in multiple threads, this speed scales with the number of cores.
 
 **No dynamic allocations**&ensp;
 In libcr, nothing is allocated dynamically, which gives the user maximum freedom to control the performance.
 This also means that no stack is allocated for coroutines, which allows libcr to have small memory footprint per task.
 
 **Operating system independent**&ensp;
-Although GCC-specific features are used (the `&&` and `goto *` operators), no operating system specific functionality is used anywhere in the library, so libcr can be used anywhere GCC supports.
+Although GCC-specific features are used (the `&&` and `goto *` operators), no operating system specific functionality is used anywhere in the library, so libcr can be used on any system GCC supports.
 
 **Plain old data (POD) types**&ensp;
 The library fully supports POD types for everything, so that the user can optimise the code using libcr to its limits.
