@@ -15,6 +15,9 @@ namespace cr::mt
 	{
 		assert(coroutine != nullptr);
 
+		if(m_invalidate_thread)
+			coroutine->libcr_thread = detail::Thread::kInvalid;
+
 		coroutine->libcr_next_waiting.atomic.release();
 
 		// Make the coroutine the last coroutine.
@@ -232,6 +235,9 @@ namespace cr::mt
 		Coroutine * coroutine)
 	{
 		assert(coroutine != nullptr);
+
+		if(m_invalidate_thread)
+			coroutine->libcr_thread = detail::Thread::kInvalid;
 
 		// Weak load sufficient, as the loop will perform a strong load anyway if necessary.
 		Coroutine * first = m_cv.m_waiting.load(std::memory_order_relaxed);

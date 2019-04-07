@@ -1,14 +1,23 @@
 namespace cr
 {
 	template<class ConditionVariable>
+	SchedulerBase<ConditionVariable> SchedulerBase<ConditionVariable>::s_instance;
+
+	template<class ConditionVariable>
 	SchedulerBase<ConditionVariable> &SchedulerBase<ConditionVariable>::instance()
 	{
-		static SchedulerBase<ConditionVariable> instance;
-		return instance;
+		return s_instance;
 	}
 
 	template<class ConditionVariable>
-	bool SchedulerBase<ConditionVariable>::schedule()
+	void SchedulerBase<ConditionVariable>::initialise(
+		std::size_t)
+	{
+	}
+
+	template<class ConditionVariable>
+	bool SchedulerBase<ConditionVariable>::schedule(
+		std::size_t)
 	{
 		return m_cv.notify_all();
 	}

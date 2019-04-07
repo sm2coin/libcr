@@ -16,6 +16,7 @@ namespace cr
 		The POD condition variable type. */
 	class SchedulerBase
 	{
+		static SchedulerBase<ConditionVariable> s_instance;
 		/** The scheduler's condition variable.
 			This is used to notify waiting coroutines. */
 		ConditionVariable m_cv;
@@ -23,12 +24,17 @@ namespace cr
 		/** Returns a singleton instance. */
 		static inline SchedulerBase<ConditionVariable> &instance();
 
+		/** Compatibility stub to initialise the scheduler. */
+		inline void initialise(
+			std::size_t = 0);
+
 		/** Progresses all currently waiting coroutines.
 		@return
 			Whether any coroutines were waiting. */
-		bool schedule();
+		bool schedule(
+			std::size_t = 0);
 
-		/** Enqueues a coroutine to wait */
+		/** Enqueues a coroutine to wait for scheduling. */
 		constexpr typename ConditionVariable::WaitCall enqueue();
 	};
 }

@@ -5,6 +5,7 @@
 
 #include "Context.hpp"
 #include "Protothread.hpp"
+#include "detail/Thread.hpp"
 #include "detail/NextPointer.hpp"
 
 #include <atomic>
@@ -31,6 +32,8 @@ namespace cr
 		impl_t libcr_coroutine;
 		/** Error flag that can be set when a blocking operation fails. */
 		bool libcr_error;
+		/** The thread the coroutine is currently owned by. */
+		detail::Thread libcr_thread;
 		/** When waiting for a resource, the next coroutine in line, or null if last. */
 		detail::NextPointer libcr_next_waiting;
 

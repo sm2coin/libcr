@@ -56,7 +56,9 @@ namespace cr::sync
 		inline Coroutine * front();
 
 		/** Notifies the first waiting coroutine, if exists.
-			Removes the notified coroutine from the waiting queue. */
+			Removes the notified coroutine from the waiting queue.
+		@return
+			Whether a coroutine was removed. */
 		bool notify_one();
 
 		/** Notifies the first waiting coroutine, if exists, and sets its error flag.
@@ -64,6 +66,12 @@ namespace cr::sync
 		@return
 			Whether a coroutine was notified. */
 		bool fail_one();
+
+		/** Removes the first waiting coroutine, if exists.
+			Does not notify the removed coroutine.
+		@return
+			The removed coroutine, or null. */
+		Coroutine * remove_one();
 
 		/** Notifies all waiting coroutines.
 			Only notifies and removes coroutines that were waiting before the call, not those added during the call.
@@ -76,6 +84,12 @@ namespace cr::sync
 		@return
 			Whether a coroutine was notified. */
 		bool fail_all();
+
+		/** Removes all waiting coroutines.
+			Does not notify the removed coroutines.
+		@return
+			The first removed coroutine, or null. */
+		Coroutine * remove_all();
 	};
 
 	/** Condition variable with FIFO notifications.
@@ -142,6 +156,12 @@ namespace cr::sync
 			Whether a coroutine was notified. */
 		bool fail_one();
 
+		/** Removes the first waiting coroutine, if exists.
+			Does not notify the removed coroutine.
+		@return
+			The removed coroutine, or null. */
+		Coroutine * remove_one();
+
 		/** Notifies all waiting coroutines.
 		@return
 			Whether any coroutine was executed. */
@@ -152,6 +172,12 @@ namespace cr::sync
 		@return
 			Whether a coroutine was notified. */
 		bool fail_all();
+
+		/** Removes all waiting coroutines.
+			Does not notify the removed coroutines.
+		@return
+			The first removed coroutine, or null. */
+		Coroutine * remove_all();
 	};
 
 	/** Condition variable with LIFO notifications.

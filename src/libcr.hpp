@@ -5,6 +5,7 @@
 
 #include "Coroutine.hpp"
 #include "Context.hpp"
+#include "HybridScheduler.hpp"
 #include "Scheduler.hpp"
 #include "primitives.hpp"
 

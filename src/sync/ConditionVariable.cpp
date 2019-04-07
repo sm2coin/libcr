@@ -33,60 +33,77 @@ namespace cr::sync
 
 	bool PODFIFOConditionVariable::notify_one()
 	{
-		if(empty())
-			return false;
-
 		Coroutine * first = m_first_waiting;
-
-		if(m_first_waiting == m_last_waiting)
+		if(first)
 		{
-			assert(!m_first_waiting->libcr_next_waiting.plain);
-			m_last_waiting = nullptr;
+			if(m_first_waiting == m_last_waiting)
+			{
+				assert(!m_last_waiting->libcr_next_waiting.plain);
+				m_last_waiting = nullptr;
+			}
+
+			m_first_waiting = first->libcr_next_waiting.plain;
+
+			(*first)();
 		}
 
-		m_first_waiting = first->libcr_next_waiting.plain;
-		first->libcr_next_waiting.plain = nullptr;
-
-		(*first)();
-
-		return true;
+		return first != nullptr;
 	}
 
 	bool PODFIFOConditionVariable::fail_one()
 	{
-		if(empty())
-			return false;
+		Coroutine * first = m_first_waiting;
+		if(first)
+		{
+			if(m_first_waiting == m_last_waiting)
+			{
+				assert(!m_last_waiting->libcr_next_waiting.plain);
+				m_last_waiting = nullptr;
+			}
 
+			m_first_waiting = first->libcr_next_waiting.plain;
+
+			first->libcr_error = true;
+			(*first)();
+		}
+
+		return first != nullptr;
+	}
+
+	Coroutine * PODFIFOConditionVariable::remove_one()
+	{
 		Coroutine * first = m_first_waiting;
 
+		if(!first)
+			return nullptr;
+
 		if(m_first_waiting == m_last_waiting)
+		{
+			assert(!m_last_waiting->libcr_next_waiting.plain);
 			m_last_waiting = nullptr;
+		}
 
 		m_first_waiting = first->libcr_next_waiting.plain;
 
-		first->libcr_error = true;
-		(*first)();
-
-		return true;
+		return first;
 	}
 
 	bool PODFIFOConditionVariable::notify_all()
 	{
 		Coroutine * coroutine = m_first_waiting;
-		m_first_waiting = nullptr;
-		m_last_waiting = nullptr;
 
 		if(!coroutine)
 			return false;
 
-		while(coroutine)
+		m_first_waiting = m_last_waiting = nullptr;
+
+		Coroutine * next;
+		do
 		{
-			Coroutine * next = coroutine->libcr_next_waiting.plain;
+			next = coroutine->libcr_next_waiting.plain;
 
 			(*coroutine)();
-
-			coroutine = next;
-		}
+		} while((coroutine = next));
 
 		return true;
 	}
@@ -94,23 +111,34 @@ namespace cr::sync
 	bool PODFIFOConditionVariable::fail_all()
 	{
 		Coroutine * coroutine = m_first_waiting;
-		m_first_waiting = nullptr;
-		m_last_waiting = nullptr;
 
 		if(!coroutine)
 			return false;
 
-		while(coroutine)
+		m_first_waiting = m_last_waiting = nullptr;
+
+		Coroutine * next;
+		do
 		{
-			Coroutine * next = coroutine->libcr_next_waiting.plain;
+			next = coroutine->libcr_next_waiting.plain;
 
 			coroutine->libcr_error = true;
 			(*coroutine)();
 
-			coroutine = next;
-		}
+		} while((coroutine = next));
 
 		return true;
+	}
+
+	Coroutine * PODFIFOConditionVariable::remove_all()
+	{
+		Coroutine * first = m_first_waiting;
+		if(first)
+		{
+			m_first_waiting = nullptr;
+			m_last_waiting = nullptr;
+		}
+		return first;
 	}
 
 	FIFOConditionVariable::FIFOConditionVariable()
@@ -166,6 +194,14 @@ namespace cr::sync
 		return true;
 	}
 
+	Coroutine * PODConditionVariable::remove_one()
+	{
+		Coroutine * first = m_waiting;
+		if(first)
+			m_waiting = first->libcr_next_waiting.plain;
+		return first;
+	}
+
 	bool PODConditionVariable::notify_all()
 	{
 		Coroutine * coroutine = m_waiting;
@@ -205,6 +241,15 @@ namespace cr::sync
 		}
 
 		return true;
+	}
+
+	Coroutine * PODConditionVariable::remove_all()
+	{
+		Coroutine * first = m_waiting;
+		if(first)
+			m_waiting = nullptr;
+		return first;
+
 	}
 
 	ConditionVariable::ConditionVariable()

@@ -1,0 +1,3 @@
+[submodule "depend/timer"]
+	path = depend/timer
+	url = https://github.com/RmbRT/timer.git

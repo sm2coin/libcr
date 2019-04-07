@@ -35,12 +35,17 @@ namespace cr::mt
 		{
 			/** The condition variable to wait for. */
 			PODFIFOConditionVariable &m_cv;
+			/** Whether to invalidate the waiting coroutine's thread. */
+			bool m_invalidate_thread;
 		public:
 			/** Initialises the wait call.
 			@param[in] cv:
-				The condition variable to wait for. */
+				The condition variable to wait for.
+			@param[in] invalidate_thread:
+				Whether to invalidate the waiting coroutine's thread. */
 			constexpr WaitCall(
-				PODFIFOConditionVariable &cv);
+				PODFIFOConditionVariable &cv,
+				bool invalidate_thread);
 
 			/** Adds a coroutine to the queue.
 			@param[in] coroutine:
@@ -51,8 +56,11 @@ namespace cr::mt
 				Coroutine * coroutine);
 		};
 
-		/** Adds a coroutine to the queue. */
-		[[nodiscard]] constexpr WaitCall wait();
+		/** Adds a coroutine to the queue.
+		@param[in] invalidate_thread:
+			Whether to invalidate the waiting coroutine's thread. */
+		[[nodiscard]] constexpr WaitCall wait(
+			bool invalidate_thread = true);
 
 		/** Notifies the first waiting coroutine, if exists.
 			Removes the notified coroutine from the waiting queue.
@@ -140,12 +148,17 @@ namespace cr::mt
 		{
 			/** The condition variable to wait for. */
 			PODConditionVariable &m_cv;
+			/** Whether to invalidate the waiting coroutine's thread. */
+			bool m_invalidate_thread;
 		public:
 			/** Initialises the wait call.
 			@param[in] cv:
-				The condition variable to wait for. */
+				The condition variable to wait for.
+			@param[in] invalidate_thread:
+				Whether to invalidate the waiting coroutine's thread. */
 			constexpr WaitCall(
-				PODConditionVariable &cv);
+				PODConditionVariable &cv,
+				bool invalidate_thread);
 
 			/** Adds a coroutine to the queue.
 				The coroutine added to the queue is the first to be notified (LIFO).
@@ -157,8 +170,11 @@ namespace cr::mt
 				Coroutine * coroutine);
 		};
 
-		/** Adds a coroutine to the queue. */
-		[[nodiscard]] constexpr WaitCall wait();
+		/** Adds a coroutine to the queue.
+		@param[in] invalidate_thread:
+			Whether to invalidate the waiting coroutine's thread. */
+		[[nodiscard]] constexpr WaitCall wait(
+			bool invalidate_thread = true);
 
 		/** Notifies the first waiting coroutine, if exists.
 			Removes the notified coroutine from the waiting queue.

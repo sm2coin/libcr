@@ -47,7 +47,7 @@ namespace cr::util
 	}
 
 	template<class T>
-	inline T &assign(T *&a, T &b)
+	inline T *&assign(T *&a, T &b)
 	{
 		return a = &b;
 	}

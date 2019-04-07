@@ -1,24 +1,30 @@
 namespace cr::mt
 {
 	constexpr PODFIFOConditionVariable::WaitCall::WaitCall(
-		PODFIFOConditionVariable &cv):
-		m_cv(cv)
+		PODFIFOConditionVariable &cv,
+		bool invalidate_thread):
+		m_cv(cv),
+		m_invalidate_thread(invalidate_thread)
 	{
 	}
 
-	constexpr PODFIFOConditionVariable::WaitCall PODFIFOConditionVariable::wait()
+	constexpr PODFIFOConditionVariable::WaitCall PODFIFOConditionVariable::wait(
+		bool invalidate_thread)
 	{
-		return WaitCall(*this);
+		return WaitCall(*this, invalidate_thread);
 	}
 
 	constexpr PODConditionVariable::WaitCall::WaitCall(
-		PODConditionVariable &cv):
-		m_cv(cv)
+		PODConditionVariable &cv,
+		bool invalidate_thread):
+		m_cv(cv),
+		m_invalidate_thread(invalidate_thread)
 	{
 	}
 
-	constexpr PODConditionVariable::WaitCall PODConditionVariable::wait()
+	constexpr PODConditionVariable::WaitCall PODConditionVariable::wait(
+		bool invalidate_thread)
 	{
-		return WaitCall(*this);
+		return WaitCall(*this, invalidate_thread);
 	}
 }
