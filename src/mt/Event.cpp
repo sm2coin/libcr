@@ -61,6 +61,7 @@ namespace cr::mt
 		// Lock the event.
 		detail::LockGuard lock { m_event.m_mutex };
 		// Fetch whether the event is active now.
+		active = true;
 		m_event.m_active.compare_exchange_strong(
 			active,
 			active,
@@ -96,7 +97,7 @@ namespace cr::mt
 		if(m_cv.notify_one())
 			return;
 
-		do
+		for(;;)
 		{
 			// If there are registering coroutines, try again.
 			if(m_registering.load_strong(std::memory_order_relaxed))
@@ -105,25 +106,25 @@ namespace cr::mt
 			// Otherwise, lock the event.
 			detail::LockGuard lock { m_mutex };
 
+			// If there are registering coroutines, try again.
+			if(m_registering.load_strong(std::memory_order_relaxed))
+				continue;
+
 			// Once more, try to remove a coroutine.
 			Coroutine * removed = m_cv.remove_one();
-			if(!removed)
-			{
-				// If there are registering coroutines, try again.
-				if(m_registering.load_strong(std::memory_order_relaxed))
-					continue;
-			} else
+			if(removed)
 			{
 				lock.unlock();
 				m_cv.acquire_and_complete(removed, removed);
 				(*removed)();
 				return;
+			} else
+			{
+				// Otherwise, set the event to active.
+				m_active.exchange(true, std::memory_order_release);
+				return;
 			}
-
-			// Otherwise, set the event to active.
-			m_active.exchange(true, std::memory_order_release);
-			break;
-		} while(true);
+		}
 	}
 
 	template<class ConditionVariable>
