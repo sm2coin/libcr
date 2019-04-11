@@ -47,8 +47,10 @@ namespace cr::sync
 			Blocks if the semaphore counter is 0. */
 		[[nodiscard]] constexpr WaitCall wait();
 
-		/** Notifies the semaphore. */
-		void notify();
+		/** Notifies the semaphore.
+		@return
+			Whether any coroutine was directly notified. */
+		bool notify();
 	};
 
 	template<class ConditionVariable>

@@ -197,6 +197,7 @@
 			if(::cr::Coroutine::libcr_parent) \
 			{ \
 				::cr::Coroutine &parent = *::cr::Coroutine::libcr_parent; \
+				parent.libcr_thread = ::cr::Coroutine::libcr_thread; \
 				cr_destroy(); \
 				parent(); \
 				return; \
@@ -226,6 +227,7 @@
 			if(::cr::Coroutine::libcr_parent) \
 			{ \
 				::cr::Coroutine &parent = *::cr::Coroutine::libcr_parent; \
+				parent.libcr_thread = ::cr::Coroutine::libcr_thread; \
 				cr_destroy(); \
 				parent(); \
 				return; \

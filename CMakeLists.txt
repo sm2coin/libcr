@@ -6,7 +6,7 @@ OPTION(LIBCR_RELEASE OFF)
 set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -Wextra -Werror -g")
 
 if(LIBCR_RELEASE)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLIBCR_RELEASE=1")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLIBCR_RELEASE=1 -O3 -mtune=native")
 endif()
 
 # Select all source files.

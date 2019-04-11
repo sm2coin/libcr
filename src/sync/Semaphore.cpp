@@ -24,15 +24,13 @@ namespace cr::sync
 	}
 
 	template<class ConditionVariable>
-	void PODSemaphoreBase<ConditionVariable>::notify()
+	bool PODSemaphoreBase<ConditionVariable>::notify()
 	{
-		if(m_cv.empty())
-		{
+		bool notified = m_cv.notify_one();
+		if(!notified)
 			++m_counter;
-		} else
-		{
-			m_cv.notify_one();
-		}
+
+		return notified;
 	}
 
 	template<class ConditionVariable>

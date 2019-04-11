@@ -9,6 +9,8 @@
 #include "Future.hpp"
 #include "Mutex.hpp"
 #include "Promise.hpp"
+#include "Queue.hpp"
+#include "Semaphore.hpp"
 
 /** Contains all synchronisation primitives.
 	These primitives are not thread-safe, however. For thread-safe versions, see namespace `cr::mt`. */
