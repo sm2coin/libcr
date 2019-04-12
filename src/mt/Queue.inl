@@ -1,44 +1,36 @@
-namespace cr::sync
+namespace cr::mt
 {
-
-	template<class Semaphore>
-	void PODQueueBasePattern<Semaphore>::initialise(
-		std::size_t capacity)
+	namespace detail
 	{
-		assert(capacity > 0);
-		m_elements.initialise(0);
-		m_free.initialise(capacity);
-	}
+		template<class Values>
+		std::size_t inc_wrap(
+			Values const& values,
+			std::atomic_size_t &value)
+		{
+			std::size_t index = value.load(std::memory_order_relaxed);
+			std::size_t next;
+			// Increment with wrap-around.
+			do {
+				if(index == values.size() -1)
+					next = 0;
+				else
+					next = index + 1;
+			} while(!value.compare_exchange_weak(
+				index,
+				next,
+				std::memory_order_relaxed,
+				std::memory_order_relaxed));
 
-	template<class Semaphore>
-	constexpr typename Semaphore::WaitCall PODQueueBasePattern<Semaphore>::free()
-	{
-		return m_free.wait();
-	}
-
-	template<class Semaphore>
-	constexpr typename Semaphore::WaitCall PODQueueBasePattern<Semaphore>::elements()
-	{
-		return m_elements.wait();
-	}
-
-	template<class Semaphore>
-	void PODQueueBasePattern<Semaphore>::push()
-	{
-		m_elements.notify();
-	}
-
-	template<class Semaphore>
-	void PODQueueBasePattern<Semaphore>::pop()
-	{
-		m_free.notify();
+			return index;
+		}
 	}
 
 	template<class T, std::size_t kSize, class Semaphore>
 	void PODFixedQueuePattern<T, kSize, Semaphore>::initialise()
 	{
-		PODQueueBasePattern<Semaphore>::initialise(kSize);
-		m_start = m_end = 0;
+		sync::PODQueueBasePattern<Semaphore>::initialise(kSize);
+		std::atomic_init(&m_start, (std::size_t) 0);
+		std::atomic_init(&m_end, (std::size_t) 0);
 	}
 
 	template<class T, std::size_t kSize, class Semaphore>
@@ -46,26 +38,25 @@ namespace cr::sync
 	CR_IMPL(PODFixedQueuePattern<T, kSize, Semaphore>::PushPattern<V>)
 		CR_AWAIT(queue->free());
 		util::assign(
-			queue->m_values[queue->m_end++],
+			queue->m_values[detail::inc_wrap(queue->m_values, queue->m_end)],
 			std::forward<V>(value));
-		if(queue->m_values.size() == queue->m_end)
-			queue->m_end = 0;
 		queue->push();
 	CR_IMPL_END
 
 	template<class T, std::size_t kSize, class Semaphore>
 	CR_IMPL(PODFixedQueuePattern<T, kSize, Semaphore>::Pop)
 		CR_AWAIT(queue->elements());
-		util::assign(*target, std::move(queue->m_values[queue->m_start++]));
-		if(queue->m_values.size() == queue->m_start)
-			queue->m_start = 0;
+		util::assign(
+			*target,
+			std::move(
+				queue->m_values[detail::inc_wrap(queue->m_values, queue->m_start)]));
 		queue->pop();
 	CR_IMPL_END
 
 	template<std::size_t kSize, class Semaphore>
 	void PODFixedQueuePattern<void, kSize, Semaphore>::initialise()
 	{
-		PODQueueBasePattern<Semaphore>::initialise(kSize);
+		sync::PODQueueBasePattern<Semaphore>::initialise(kSize);
 	}
 
 	template<std::size_t kSize, class Semaphore>

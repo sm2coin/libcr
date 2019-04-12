@@ -1,59 +1,26 @@
 /** @file Queue.hpp
-	Contains the thread-unsafe queue types. */
-#ifndef __libcr_sync_queue_hpp_defined
-#define __libcr_sync_queue_hpp_defined
+	Contains the thread-safe queue types. */
+#ifndef __libcr_mt_queue_hpp_defined
+#define __libcr_mt_queue_hpp_defined
 
 #include "Semaphore.hpp"
-#include "../primitives.hpp"
+#include "../sync/Queue.hpp"
+#include "../util/Atomic.hpp"
 
-namespace cr::sync
+namespace cr::mt
 {
-	template<class Semaphore>
-	/** POD queue base type. */
-	class PODQueueBasePattern
-	{
-		/** The currently used slots. */
-		Semaphore m_elements;
-		/** The currently free slots.*/
-		Semaphore m_free;
-	public:
-		/** Initialises the queue.
-		@param[in] capacity:
-			The capacity the queue should have.  */
-		void initialise(
-			std::size_t capacity);
-
-		/** Waits until there is at least one free slot in the queue.
-			To be used with `#CR_AWAIT`. */
-		[[nodiscard]] constexpr typename Semaphore::WaitCall free();
-		/** Waits until there is at least one element in the queue.
-			To be used with `#CR_AWAIT`. */
-		[[nodiscard]] constexpr typename Semaphore::WaitCall elements();
-
-		/** Adds an element to the queue, notifying `elements()`.
-			This has to be called after the element is added. */
-		inline void push();
-		/** Removes an element from the queue, notifying `free()`.
-			This has to be called after the element is removed. */
-		inline void pop();
-	};
-
 	template<class T, std::size_t kSize, class Semaphore>
-	/** POD fixed capacity queue type.
+	/** POD fixed queue type.
 	@tparam T:
-		The queue's data type.
-	@tparam kSize:
-		The queue's capacity.
-	@tparam Semaphore:
-		The condition variable type to use internally. */
-	class PODFixedQueuePattern : PODQueueBasePattern<Semaphore>
+		The queue's element type. */
+	class PODFixedQueuePattern : sync::PODQueueBasePattern<Semaphore>
 	{
 		/** The queue's values. */
 		std::array<T, kSize> m_values;
 		/** The first element's index. */
-		std::size_t m_start;
+		std::atomic_size_t m_start;
 		/** The end of the queue. */
-		std::size_t m_end;
+		std::atomic_size_t m_end;
 	public:
 		/** Initialises the queue. */
 		void initialise();
@@ -86,7 +53,7 @@ namespace cr::sync
 	};
 
 	template<std::size_t kSize, class Semaphore>
-	class PODFixedQueuePattern<void, kSize, Semaphore> : PODQueueBasePattern<Semaphore>
+	class PODFixedQueuePattern<void, kSize, Semaphore> : sync::PODQueueBasePattern<Semaphore>
 	{
 	public:
 		void initialise();
