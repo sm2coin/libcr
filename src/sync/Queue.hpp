@@ -113,7 +113,7 @@ namespace cr::sync
 	@tparam kSize:
 		The queue's capacity.
 	@tparam Semaphore:
-		The condition variable type to use. */
+		The semaphore type to use. */
 	class FixedQueuePattern : public PODFixedQueuePattern<T, kSize, Semaphore>
 	{
 		using PODFixedQueuePattern<T, kSize, Semaphore>::initialise;
@@ -123,12 +123,32 @@ namespace cr::sync
 	};
 
 	template<class T, std::size_t kSize>
+	/** POD fixed queue type.
+	@tparam T:
+		The queue's data type.
+	@tparam kSize:
+		The queue's capacity. */
 	using PODFixedQueue = PODFixedQueuePattern<T, kSize, sync::PODSemaphore>;
 	template<class T, std::size_t kSize>
+	/** POD fixed queue type with FIFO notifications.
+	@tparam T:
+		The queue's data type.
+	@tparam kSize:
+		The queue's capacity. */
 	using PODFIFOFixedQueue = PODFixedQueuePattern<T, kSize, sync::PODFIFOSemaphore>;
 	template<class T, std::size_t kSize>
+	/** Fixed queue type.
+	@tparam T:
+		The queue's data type.
+	@tparam kSize:
+		The queue's capacity. */
 	using FixedQueue = FixedQueuePattern<T, kSize, sync::PODSemaphore>;
 	template<class T, std::size_t kSize>
+	/** Fixed queue type with FIFO notifications.
+	@tparam T:
+		The queue's data type.
+	@tparam kSize:
+		The queue's capacity. */
 	using FIFOFixedQueue = FixedQueuePattern<T, kSize, sync::PODFIFOSemaphore>;
 }
 

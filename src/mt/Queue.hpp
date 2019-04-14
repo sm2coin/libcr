@@ -12,10 +12,17 @@ namespace cr::mt
 	template<class T, std::size_t kSize, class Semaphore>
 	/** POD fixed queue type.
 	@tparam T:
-		The queue's element type. */
+		The queue's element type.
+		May also be a complex type, as the operations on the queue's values are not atomic.
+	@tparam kSize:
+		The queue's capacity.
+	@tparam Semaphore:
+		POD thread-safe semaphore type.
+		It is important that the operations are acquire-release operations. */
 	class PODFixedQueuePattern : sync::PODQueueBasePattern<Semaphore>
 	{
-		/** The queue's values. */
+		/** The queue's values.
+			The values need not be atomic, as semaphores use acquire-release ordering. */
 		std::array<T, kSize> m_values;
 		/** The first element's index. */
 		std::atomic_size_t m_start;
@@ -80,7 +87,8 @@ namespace cr::mt
 	@tparam kSize:
 		The queue's capacity.
 	@tparam Semaphore:
-		The condition variable type to use. */
+		The thread-safe semaphore type to use.
+		It is important that the operations are acquire-release operations. */
 	class FixedQueuePattern : public PODFixedQueuePattern<T, kSize, Semaphore>
 	{
 		using PODFixedQueuePattern<T, kSize, Semaphore>::initialise;
@@ -90,13 +98,33 @@ namespace cr::mt
 	};
 
 	template<class T, std::size_t kSize>
-	using PODFixedQueue = PODFixedQueuePattern<T, kSize, sync::PODSemaphore>;
+	/** POD fixed queue type.
+	@tparam T:
+		The queue's data type.
+	@tparam kSize:
+		The queue's capacity. */
+	using PODFixedQueue = PODFixedQueuePattern<T, kSize, mt::PODSemaphore>;
 	template<class T, std::size_t kSize>
-	using PODFIFOFixedQueue = PODFixedQueuePattern<T, kSize, sync::PODFIFOSemaphore>;
+	/** POD fixed queue type with FIFO notifications.
+	@tparam T:
+		The queue's data type.
+	@tparam kSize:
+		The queue's capacity. */
+	using PODFIFOFixedQueue = PODFixedQueuePattern<T, kSize, mt::PODFIFOSemaphore>;
 	template<class T, std::size_t kSize>
-	using FixedQueue = FixedQueuePattern<T, kSize, sync::PODSemaphore>;
+	/** Fixed queue type.
+	@tparam T:
+		The queue's data type.
+	@tparam kSize:
+		The queue's capacity. */
+	using FixedQueue = FixedQueuePattern<T, kSize, mt::PODSemaphore>;
 	template<class T, std::size_t kSize>
-	using FIFOFixedQueue = FixedQueuePattern<T, kSize, sync::PODFIFOSemaphore>;
+	/** Fixed queue type with FIFO notifications.
+	@tparam T:
+		The queue's data type.
+	@tparam kSize:
+		The queue's capacity. */
+	using FIFOFixedQueue = FixedQueuePattern<T, kSize, mt::PODFIFOSemaphore>;
 }
 
 #include "Queue.inl"
