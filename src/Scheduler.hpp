@@ -14,15 +14,15 @@ namespace cr
 	/** Simple scheduler using a condition variable.
 	@tparam PODConditionVariable:
 		The POD condition variable type. */
-	class SchedulerBase
+	class SchedulerPattern
 	{
-		static SchedulerBase<ConditionVariable> s_instance;
+		static SchedulerPattern<ConditionVariable> s_instance;
 		/** The scheduler's condition variable.
 			This is used to notify waiting coroutines. */
 		ConditionVariable m_cv;
 	public:
 		/** Returns a singleton instance. */
-		static inline SchedulerBase<ConditionVariable> &instance();
+		static inline SchedulerPattern<ConditionVariable> &instance();
 
 		/** Compatibility stub to initialise the scheduler. */
 		inline void initialise(

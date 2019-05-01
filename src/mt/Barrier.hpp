@@ -9,7 +9,7 @@ namespace cr::mt
 {
 	template<class ConditionVariable>
 	/** Multithreading enabled barrier type. */
-	class PODBarrierBase
+	class PODBarrierPattern
 	{
 		/** The barrier's condition variable. */
 		ConditionVariable m_cv;
@@ -34,13 +34,13 @@ namespace cr::mt
 		class WaitCall
 		{
 			/** The barrier to wait for. */
-			PODBarrierBase<ConditionVariable> &m_barrier;
+			PODBarrierPattern<ConditionVariable> &m_barrier;
 		public:
 			/** Creates a wait call.
 			@param[in] barrier:
 				The barrier to wait for. */
 			constexpr WaitCall(
-				PODBarrierBase<ConditionVariable> &barrier);
+				PODBarrierPattern<ConditionVariable> &barrier);
 
 			/** Waits for the barrier.
 			@param[in] coroutine:
@@ -58,29 +58,29 @@ namespace cr::mt
 
 	template<class ConditionVariable>
 	/** Multithreading enabled barrier type. */
-	class BarrierBase : PODBarrierBase<ConditionVariable>
+	class BarrierPattern : PODBarrierPattern<ConditionVariable>
 	{
 	public:
 		/** Initialises the barrier to an unblocking state. */
-		BarrierBase();
+		BarrierPattern();
 		/** Initialises the barrier to block `count` coroutines.
 		@param[in] count:
 			The amount of corouines to block. */
-		explicit BarrierBase(
+		explicit BarrierPattern(
 			std::size_t count);
 
-		using PODBarrierBase<ConditionVariable>::set;
-		using PODBarrierBase<ConditionVariable>::wait;
+		using PODBarrierPattern<ConditionVariable>::set;
+		using PODBarrierPattern<ConditionVariable>::wait;
 	};
 
 	/** Threadsafe POD barrier type without ordering guarantees. */
-	typedef PODBarrierBase<PODConditionVariable> PODBarrier;
+	typedef PODBarrierPattern<PODConditionVariable> PODBarrier;
 	/** Threadsafe POD barrier type with FIFO ordering. */
-	typedef PODBarrierBase<PODFIFOConditionVariable> PODFIFOBarrier;
+	typedef PODBarrierPattern<PODFIFOConditionVariable> PODFIFOBarrier;
 	/** Threadsafe barrier type without ordering guarantees. */
-	typedef BarrierBase<PODConditionVariable> Barrier;
+	typedef BarrierPattern<PODConditionVariable> Barrier;
 	/** Threadsafe barrier type with FIFO ordering. */
-	typedef BarrierBase<PODFIFOConditionVariable> FIFOBarrier;
+	typedef BarrierPattern<PODFIFOConditionVariable> FIFOBarrier;
 }
 
 #include "Barrier.inl"

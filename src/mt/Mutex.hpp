@@ -9,7 +9,7 @@ namespace cr::mt
 {
 	template<class ConditionVariable>
 	/** POD mutex type. */
-	class PODMutexBase : PODConsumableEventBase<ConditionVariable>
+	class PODMutexPattern : PODConsumableEventPattern<ConditionVariable>
 	{
 	public:
 		/** Tries to lock the mutex.
@@ -19,7 +19,7 @@ namespace cr::mt
 		inline bool try_lock();
 		/** Locks the mutex.
 			If the mutex is locked already, blocks the coroutine until the mutex is released. To be used with `#CR_AWAIT`. */
-		inline typename PODConsumableEventBase<ConditionVariable>::ConsumeCall lock();
+		inline typename PODConsumableEventPattern<ConditionVariable>::ConsumeCall lock();
 		/** Unlocks the mutex.
 			The mutex must be locked. Only the owner should unlock the mutex. */
 		inline void unlock();
@@ -31,17 +31,17 @@ namespace cr::mt
 
 	template<class ConditionVariable>
 	/** Mutex type. */
-	class MutexBase : public PODMutexBase<ConditionVariable>
+	class MutexPattern : public PODMutexPattern<ConditionVariable>
 	{
-		using PODMutexBase<ConditionVariable>::initialise;
+		using PODMutexPattern<ConditionVariable>::initialise;
 	public:
-		inline MutexBase();
+		inline MutexPattern();
 	};
 
-	typedef PODMutexBase<PODConditionVariable> PODMutex;
-	typedef PODMutexBase<PODFIFOConditionVariable> PODFIFOMutex;
-	typedef MutexBase<PODConditionVariable> Mutex;
-	typedef MutexBase<PODFIFOConditionVariable> FIFOMutex;
+	typedef PODMutexPattern<PODConditionVariable> PODMutex;
+	typedef PODMutexPattern<PODFIFOConditionVariable> PODFIFOMutex;
+	typedef MutexPattern<PODConditionVariable> Mutex;
+	typedef MutexPattern<PODFIFOConditionVariable> FIFOMutex;
 }
 
 #include "Mutex.inl"

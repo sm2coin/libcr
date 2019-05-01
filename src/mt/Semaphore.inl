@@ -1,26 +1,26 @@
 namespace cr::mt
 {
 	template<class ConditionVariable>
-	constexpr PODSemaphoreBase<ConditionVariable>::WaitCall::WaitCall(
-		PODSemaphoreBase<ConditionVariable> * semaphore):
+	constexpr PODSemaphorePattern<ConditionVariable>::WaitCall::WaitCall(
+		PODSemaphorePattern<ConditionVariable> * semaphore):
 		m_semaphore(*semaphore)
 	{
 	}
 
 	template<class ConditionVariable>
-	constexpr typename PODSemaphoreBase<ConditionVariable>::WaitCall PODSemaphoreBase<ConditionVariable>::wait()
+	constexpr typename PODSemaphorePattern<ConditionVariable>::WaitCall PODSemaphorePattern<ConditionVariable>::wait()
 	{
 		return this;
 	}
 
 	template<class ConditionVariable>
-	SemaphoreBase<ConditionVariable>::SemaphoreBase()
+	SemaphorePattern<ConditionVariable>::SemaphorePattern()
 	{
 		initialise(0);
 	}
 
 	template<class ConditionVariable>
-	SemaphoreBase<ConditionVariable>::SemaphoreBase(
+	SemaphorePattern<ConditionVariable>::SemaphorePattern(
 		std::size_t count)
 	{
 		initialise(count);

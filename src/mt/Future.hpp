@@ -9,11 +9,11 @@
 namespace cr::mt
 {
 	template<class T, class Event>
-	class PODPromiseBase;
+	class PODPromisePattern;
 	template<class Event>
-	class PODFutureBaseBase;
+	class PODFutureBasePattern;
 	template<class T, class Event>
-	class PODPromiseBaseBase;
+	class PODPromiseBasePattern;
 
 	template<class T, class Event>
 	/** POD class for futures with a value.
@@ -21,15 +21,15 @@ namespace cr::mt
 		The future's value type.
 	@tparam Event:
 		The future's event flavour. */
-	class PODFutureBase;
+	class PODFuturePattern;
 
 	template<class Event>
 	/** POD class for futures without a value.
 	@tparam Event:
 		The future's event flavour. */
-	class PODFutureBase<void, Event> : Event
+	class PODFuturePattern<void, Event> : Event
 	{
-		friend class PODPromiseBase<void, Event>;
+		friend class PODPromisePattern<void, Event>;
 		/** Fulfills the promise. */
 		inline void fulfill();
 	public:
@@ -43,9 +43,9 @@ namespace cr::mt
 	};
 
 	template<class T, class Event>
-	class PODFutureBase : Event
+	class PODFuturePattern : Event
 	{
-		friend class PODPromiseBase<T, Event>;
+		friend class PODPromisePattern<T, Event>;
 		/** The future's value. */
 		T m_value;
 		/** To avoid race conditions when fulfilling the promise. */
@@ -81,60 +81,60 @@ namespace cr::mt
 		The future's value type.
 	@tparam Event:
 		The event flavour to use. */
-	class FutureBase;
+	class FuturePattern;
 
 	template<class Event>
 	/** Future class without a value.
 	@tparam Event:
 		The event flavour to use. */
-	class FutureBase<void, Event> : PODFutureBase<void, Event>
+	class FuturePattern<void, Event> : PODFuturePattern<void, Event>
 	{
-		friend class PODPromiseBase<void, Event>;
-		friend class PODPromiseBaseBase<void, Event>;
+		friend class PODPromisePattern<void, Event>;
+		friend class PODPromiseBasePattern<void, Event>;
 	public:
 		/** Initialises the future to an unfulfilled state. */
-		FutureBase();
+		FuturePattern();
 
-		using PODFutureBase<void, Event>::wait;
-		using PODFutureBase<void, Event>::initialise;
-		using PODFutureBase<void, Event>::fulfilled;
-		using PODFutureBase<void, Event>::listeners;
+		using PODFuturePattern<void, Event>::wait;
+		using PODFuturePattern<void, Event>::initialise;
+		using PODFuturePattern<void, Event>::fulfilled;
+		using PODFuturePattern<void, Event>::listeners;
 
-		using typename PODFutureBase<void, Event>::value_t;
+		using typename PODFuturePattern<void, Event>::value_t;
 	};
 
 	template<class T, class Event>
-	class FutureBase : PODFutureBase<T, Event>
+	class FuturePattern : PODFuturePattern<T, Event>
 	{
-		friend class PODPromiseBase<T, Event>;
-		friend class PODPromiseBaseBase<T, Event>;
+		friend class PODPromisePattern<T, Event>;
+		friend class PODPromiseBasePattern<T, Event>;
 	public:
 		/** Initialises the future to an unfulfilled state. */
-		FutureBase();
+		FuturePattern();
 
-		using PODFutureBase<T, Event>::wait;
-		using PODFutureBase<T, Event>::initialise;
-		using PODFutureBase<T, Event>::fulfilled;
-		using PODFutureBase<T, Event>::listeners;
-		using PODFutureBase<T, Event>::value;
+		using PODFuturePattern<T, Event>::wait;
+		using PODFuturePattern<T, Event>::initialise;
+		using PODFuturePattern<T, Event>::fulfilled;
+		using PODFuturePattern<T, Event>::listeners;
+		using PODFuturePattern<T, Event>::value;
 
-		using typename PODFutureBase<T, Event>::value_t;
+		using typename PODFuturePattern<T, Event>::value_t;
 	};
 
 
 	template<class T>
 	/** POD future type. */
-	using PODFuture = PODFutureBase<T, PODEvent>;
+	using PODFuture = PODFuturePattern<T, PODEvent>;
 	template<class T>
 	/** Future type. */
-	using Future = FutureBase<T, PODEvent>;
+	using Future = FuturePattern<T, PODEvent>;
 
 	template<class T>
 	/** POD future type that supports only one waiting coroutine. */
-	using PODFIFOFuture = PODFutureBase<T, PODFIFOEvent>;
+	using PODFIFOFuture = PODFuturePattern<T, PODFIFOEvent>;
 	template<class T>
 	/** Future type that supports only one waiting coroutine. */
-	using FIFOFuture = FutureBase<T, PODFIFOEvent>;
+	using FIFOFuture = FuturePattern<T, PODFIFOEvent>;
 }
 
 #include "Future.inl"

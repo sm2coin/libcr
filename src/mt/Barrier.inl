@@ -1,14 +1,14 @@
 namespace cr::mt
 {
 	template<class ConditionVariable>
-	constexpr PODBarrierBase<ConditionVariable>::WaitCall::WaitCall(
-		PODBarrierBase<ConditionVariable> &barrier):
+	constexpr PODBarrierPattern<ConditionVariable>::WaitCall::WaitCall(
+		PODBarrierPattern<ConditionVariable> &barrier):
 		m_barrier(barrier)
 	{
 	}
 
 	template<class ConditionVariable>
-	constexpr typename PODBarrierBase<ConditionVariable>::WaitCall PODBarrierBase<ConditionVariable>::wait()
+	constexpr typename PODBarrierPattern<ConditionVariable>::WaitCall PODBarrierPattern<ConditionVariable>::wait()
 	{
 		return WaitCall(*this);
 	}

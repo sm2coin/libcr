@@ -9,7 +9,7 @@ namespace cr::sync
 {
 	template<class ConditionVariable>
 	/** POD semaphore type. */
-	class PODSemaphoreBase
+	class PODSemaphorePattern
 	{
 		/** The semaphore's condition variable. */
 		ConditionVariable m_cv;
@@ -26,13 +26,13 @@ namespace cr::sync
 		class WaitCall
 		{
 			/** The semaphore to wait for. */
-			PODSemaphoreBase<ConditionVariable> &m_semaphore;
+			PODSemaphorePattern<ConditionVariable> &m_semaphore;
 		public:
 			/** Initialises the wait call.
 			@param[in] semaphore:
 				The semaphore to wait for. */
 			constexpr WaitCall(
-				PODSemaphoreBase<ConditionVariable> &semaphore);
+				PODSemaphorePattern<ConditionVariable> &semaphore);
 
 			/** Waits for the semaphore.
 			@param[in] coroutine:
@@ -55,23 +55,23 @@ namespace cr::sync
 
 	template<class ConditionVariable>
 	/** Semaphore type. */
-	class SemaphoreBase : PODSemaphoreBase<ConditionVariable>
+	class SemaphorePattern : PODSemaphorePattern<ConditionVariable>
 	{
 	public:
-		using PODSemaphoreBase<ConditionVariable>::wait;
-		using PODSemaphoreBase<ConditionVariable>::notify;
+		using PODSemaphorePattern<ConditionVariable>::wait;
+		using PODSemaphorePattern<ConditionVariable>::notify;
 
 		/** Creates a semaphore.
 		@param[in] counter:
 			The semaphore's initial counter value. */
-		SemaphoreBase(
+		SemaphorePattern(
 			std::size_t counter);
 	};
 
-	typedef PODSemaphoreBase<PODConditionVariable> PODSemaphore;
-	typedef PODSemaphoreBase<PODFIFOConditionVariable> PODFIFOSemaphore;
-	typedef SemaphoreBase<PODConditionVariable> Semaphore;
-	typedef SemaphoreBase<PODFIFOConditionVariable> FIFOSemaphore;
+	typedef PODSemaphorePattern<PODConditionVariable> PODSemaphore;
+	typedef PODSemaphorePattern<PODFIFOConditionVariable> PODFIFOSemaphore;
+	typedef SemaphorePattern<PODConditionVariable> Semaphore;
+	typedef SemaphorePattern<PODFIFOConditionVariable> FIFOSemaphore;
 }
 
 #include "Semaphore.inl"

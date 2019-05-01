@@ -193,8 +193,8 @@ namespace cr::sync
 		~ConditionVariable();
 	};
 
-	typedef cr::SchedulerBase<FIFOConditionVariable> FIFOScheduler;
-	typedef cr::SchedulerBase<ConditionVariable> Scheduler;
+	typedef cr::SchedulerPattern<FIFOConditionVariable> FIFOScheduler;
+	typedef cr::SchedulerPattern<ConditionVariable> Scheduler;
 }
 
 #include "ConditionVariable.inl"

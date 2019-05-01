@@ -7,7 +7,7 @@
 namespace cr::mt
 {
 	template<class ConditionVariable>
-	void PODSemaphoreBase<ConditionVariable>::initialise(
+	void PODSemaphorePattern<ConditionVariable>::initialise(
 		std::size_t count)
 	{
 		m_cv.initialise();
@@ -17,7 +17,7 @@ namespace cr::mt
 	}
 
 	template<class ConditionVariable>
-	void PODSemaphoreBase<ConditionVariable>::notify()
+	void PODSemaphorePattern<ConditionVariable>::notify()
 	{
 		if(m_cv.notify_one())
 			return;
@@ -63,7 +63,7 @@ namespace cr::mt
 	}
 
 	template<class ConditionVariable>
-	sync::mayblock PODSemaphoreBase<ConditionVariable>::WaitCall::libcr_wait(
+	sync::mayblock PODSemaphorePattern<ConditionVariable>::WaitCall::libcr_wait(
 		Coroutine * coroutine)
 	{
 		if(m_semaphore.try_wait())
@@ -85,7 +85,7 @@ namespace cr::mt
 	}
 
 	template<class ConditionVariable>
-	bool PODSemaphoreBase<ConditionVariable>::try_wait()
+	bool PODSemaphorePattern<ConditionVariable>::try_wait()
 	{
 		std::size_t count = 1;
 		while(count)
@@ -101,8 +101,8 @@ namespace cr::mt
 		return false;
 	}
 
-	template class PODSemaphoreBase<PODConditionVariable>;
-	template class PODSemaphoreBase<PODFIFOConditionVariable>;
-	template class SemaphoreBase<PODConditionVariable>;
-	template class SemaphoreBase<PODFIFOConditionVariable>;
+	template class PODSemaphorePattern<PODConditionVariable>;
+	template class PODSemaphorePattern<PODFIFOConditionVariable>;
+	template class SemaphorePattern<PODConditionVariable>;
+	template class SemaphorePattern<PODFIFOConditionVariable>;
 }

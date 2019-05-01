@@ -1,19 +1,19 @@
 namespace cr::mt
 {
 	template<class Event>
-	void PODFutureBase<void, Event>::fulfill()
+	void PODFuturePattern<void, Event>::fulfill()
 	{
 		Event::fire();
 	}
 
 	template<class Event>
-	bool PODFutureBase<void, Event>::fulfilled() const
+	bool PODFuturePattern<void, Event>::fulfilled() const
 	{
 		return Event::active();
 	}
 
 	template<class T, class Event>
-	bool PODFutureBase<T, Event>::fulfill(
+	bool PODFuturePattern<T, Event>::fulfill(
 		T && value)
 	{
 		// Is the promise already fulfilled?
@@ -39,7 +39,7 @@ namespace cr::mt
 	}
 
 	template<class T, class Event>
-	bool PODFutureBase<T, Event>::fulfill(
+	bool PODFuturePattern<T, Event>::fulfill(
 		T const& value)
 	{
 		// Is the promise already fulfilled?
@@ -65,20 +65,20 @@ namespace cr::mt
 	}
 
 	template<class T, class Event>
-	bool PODFutureBase<T, Event>::fulfilled() const
+	bool PODFuturePattern<T, Event>::fulfilled() const
 	{
 		return Event::active();
 	}
 
 	template<class T, class Event>
-	void PODFutureBase<T, Event>::initialise()
+	void PODFuturePattern<T, Event>::initialise()
 	{
 		Event::initialise();
 		m_mutex.initialise();
 	}
 
 	template<class T, class Event>
-	util::copy_t<T> PODFutureBase<T, Event>::value() const
+	util::copy_t<T> PODFuturePattern<T, Event>::value() const
 	{
 		// The promise must be fulfilled before acquiring its value.
 		assert(fulfilled());

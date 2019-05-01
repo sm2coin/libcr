@@ -4,14 +4,14 @@
 namespace cr::sync
 {
 	template<class ConditionVariable>
-	void PODEventBase<ConditionVariable>::initialise()
+	void PODEventPattern<ConditionVariable>::initialise()
 	{
 		m_cv.initialise();
 		m_happened = false;
 	}
 
 	template<class ConditionVariable>
-	void PODEventBase<ConditionVariable>::fire()
+	void PODEventPattern<ConditionVariable>::fire()
 	{
 		assert(!m_happened);
 		m_happened = true;
@@ -19,14 +19,14 @@ namespace cr::sync
 	}
 
 	template<class ConditionVariable>
-	void PODEventBase<ConditionVariable>::clear()
+	void PODEventPattern<ConditionVariable>::clear()
 	{
 		assert(m_happened);
 		m_happened = false;
 	}
 
 	template<class ConditionVariable>
-	mayblock PODEventBase<ConditionVariable>::WaitCall::libcr_wait(
+	mayblock PODEventPattern<ConditionVariable>::WaitCall::libcr_wait(
 		Coroutine * coroutine)
 	{
 		if(m_event.m_happened)
@@ -38,19 +38,19 @@ namespace cr::sync
 	}
 
 	template<class ConditionVariable>
-	bool PODEventBase<ConditionVariable>::happened() const
+	bool PODEventPattern<ConditionVariable>::happened() const
 	{
 		return m_happened;
 	}
 
 	template<class ConditionVariable>
-	EventBase<ConditionVariable>::EventBase()
+	EventPattern<ConditionVariable>::EventPattern()
 	{
-		PODEventBase<ConditionVariable>::initialise();
+		PODEventPattern<ConditionVariable>::initialise();
 	}
 
 	template<class ConditionVariable>
-	void PODConsumableEventBase<ConditionVariable>::fire()
+	void PODConsumableEventPattern<ConditionVariable>::fire()
 	{
 		assert(!m_happened);
 		if(!m_cv.notify_one())
@@ -58,13 +58,13 @@ namespace cr::sync
 	}
 
 	template<class ConditionVariable>
-	ConsumableEventBase<ConditionVariable>::ConsumableEventBase()
+	ConsumableEventPattern<ConditionVariable>::ConsumableEventPattern()
 	{
-		PODConsumableEventBase<ConditionVariable>::initialise();
+		PODConsumableEventPattern<ConditionVariable>::initialise();
 	}
 
 	template<class ConditionVariable>
-	mayblock PODConsumableEventBase<ConditionVariable>::ConsumeCall::libcr_wait(
+	mayblock PODConsumableEventPattern<ConditionVariable>::ConsumeCall::libcr_wait(
 		Coroutine * coroutine)
 	{
 		if(m_event.m_happened)
@@ -77,12 +77,12 @@ namespace cr::sync
 		}
 	}
 
-	template class PODEventBase<PODConditionVariable>;
-	template class PODEventBase<PODFIFOConditionVariable>;
-	template class EventBase<PODConditionVariable>;
-	template class EventBase<PODFIFOConditionVariable>;
-	template class PODConsumableEventBase<PODConditionVariable>;
-	template class PODConsumableEventBase<PODFIFOConditionVariable>;
-	template class ConsumableEventBase<PODConditionVariable>;
-	template class ConsumableEventBase<PODFIFOConditionVariable>;
+	template class PODEventPattern<PODConditionVariable>;
+	template class PODEventPattern<PODFIFOConditionVariable>;
+	template class EventPattern<PODConditionVariable>;
+	template class EventPattern<PODFIFOConditionVariable>;
+	template class PODConsumableEventPattern<PODConditionVariable>;
+	template class PODConsumableEventPattern<PODFIFOConditionVariable>;
+	template class ConsumableEventPattern<PODConditionVariable>;
+	template class ConsumableEventPattern<PODFIFOConditionVariable>;
 }

@@ -5,13 +5,13 @@
 namespace cr::mt
 {
 	template<class ConditionVariable>
-	void PODMutexBase<ConditionVariable>::initialise()
+	void PODMutexPattern<ConditionVariable>::initialise()
 	{
-		PODConsumableEventBase<ConditionVariable>::initialise(true);
+		PODConsumableEventPattern<ConditionVariable>::initialise(true);
 	}
 
-	template class PODMutexBase<PODConditionVariable>;
-	template class PODMutexBase<PODFIFOConditionVariable>;
-	template class MutexBase<PODConditionVariable>;
-	template class MutexBase<PODFIFOConditionVariable>;
+	template class PODMutexPattern<PODConditionVariable>;
+	template class PODMutexPattern<PODFIFOConditionVariable>;
+	template class MutexPattern<PODConditionVariable>;
+	template class MutexPattern<PODFIFOConditionVariable>;
 }

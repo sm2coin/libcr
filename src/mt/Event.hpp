@@ -10,15 +10,15 @@
 namespace cr::mt
 {
 	template<class ConditionVariable>
-	class PODConsumableEventBase;
+	class PODConsumableEventPattern;
 
 	template<class ConditionVariable>
 	/** Threadsafe POD repeatable event type.
 	@tparam ConditionVariable:
 		Which condition variable flavour to use. */
-	class PODEventBase
+	class PODEventPattern
 	{
-		friend class PODConsumableEventBase<ConditionVariable>;
+		friend class PODConsumableEventPattern<ConditionVariable>;
 		/** The event's condition variable. */
 		ConditionVariable m_cv;
 		/** Whether the event happened. */
@@ -47,13 +47,13 @@ namespace cr::mt
 		class WaitCall
 		{
 			/** The event to wait for. */
-			PODEventBase<ConditionVariable> &m_event;
+			PODEventPattern<ConditionVariable> &m_event;
 		public:
 			/** Initialises the wait call.
 			@param[in] event:
 				The event to wait for. */
 			constexpr WaitCall(
-				PODEventBase<ConditionVariable> &event);
+				PODEventPattern<ConditionVariable> &event);
 
 			/** Waits for the event.
 				Blocks if the event did not happen yet.
@@ -74,29 +74,29 @@ namespace cr::mt
 	/** Threadsafe repeatable event type.
 	@tparam ConditionVariable
 	Which condition varaible flavour to use. */
-	class EventBase : PODEventBase<ConditionVariable>
+	class EventPattern : PODEventPattern<ConditionVariable>
 	{
 	public:
-		using PODEventBase<ConditionVariable>::fire;
-		using PODEventBase<ConditionVariable>::clear;
-		using PODEventBase<ConditionVariable>::wait;
-		using PODEventBase<ConditionVariable>::active;
+		using PODEventPattern<ConditionVariable>::fire;
+		using PODEventPattern<ConditionVariable>::clear;
+		using PODEventPattern<ConditionVariable>::wait;
+		using PODEventPattern<ConditionVariable>::active;
 
 		/** Initialises the event. */
-		EventBase();
+		EventPattern();
 	};
 
 	template<class ConditionVariable>
-	class PODConsumableEventBase : PODEventBase<ConditionVariable>
+	class PODConsumableEventPattern : PODEventPattern<ConditionVariable>
 	{
-		using PODEventBase<ConditionVariable>::m_cv;
-		using PODEventBase<ConditionVariable>::m_active;
-		using PODEventBase<ConditionVariable>::m_registering;
-		using PODEventBase<ConditionVariable>::m_mutex;
+		using PODEventPattern<ConditionVariable>::m_cv;
+		using PODEventPattern<ConditionVariable>::m_active;
+		using PODEventPattern<ConditionVariable>::m_registering;
+		using PODEventPattern<ConditionVariable>::m_mutex;
 	public:
-		using PODEventBase<ConditionVariable>::initialise;
-		using PODEventBase<ConditionVariable>::clear;
-		using PODEventBase<ConditionVariable>::active;
+		using PODEventPattern<ConditionVariable>::initialise;
+		using PODEventPattern<ConditionVariable>::clear;
+		using PODEventPattern<ConditionVariable>::active;
 
 		/** Notifies only one coroutine.
 			The event is only set if no coroutine is waiting. */
@@ -106,13 +106,13 @@ namespace cr::mt
 		class ConsumeCall
 		{
 			/** Initialises the event call. */
-			PODConsumableEventBase<ConditionVariable> &m_event;
+			PODConsumableEventPattern<ConditionVariable> &m_event;
 		public:
 			/** Initialises the wait call.
 			@param[in] event:
 				The consumable event to wait for.*/
 			constexpr ConsumeCall(
-				PODConsumableEventBase<ConditionVariable> &event);
+				PODConsumableEventPattern<ConditionVariable> &event);
 
 			/** Waits for the event.
 			@param[in] coroutine:
@@ -135,36 +135,36 @@ namespace cr::mt
 
 	template<class ConditionVariable>
 	/** Consumable event type. */
-	class ConsumableEventBase : PODConsumableEventBase<ConditionVariable>
+	class ConsumableEventPattern : PODConsumableEventPattern<ConditionVariable>
 	{
 	public:
-		using PODConsumableEventBase<ConditionVariable>::fire;
-		using PODConsumableEventBase<ConditionVariable>::clear;
-		using PODConsumableEventBase<ConditionVariable>::consume;
-		using PODConsumableEventBase<ConditionVariable>::active;
+		using PODConsumableEventPattern<ConditionVariable>::fire;
+		using PODConsumableEventPattern<ConditionVariable>::clear;
+		using PODConsumableEventPattern<ConditionVariable>::consume;
+		using PODConsumableEventPattern<ConditionVariable>::active;
 
 		/** Initialises the event. */
-		ConsumableEventBase();
+		ConsumableEventPattern();
 	};
 
 
 	/** POD event type. */
-	typedef PODEventBase<PODConditionVariable> PODEvent;
+	typedef PODEventPattern<PODConditionVariable> PODEvent;
 	/** POD consumable event type. */
-	typedef PODConsumableEventBase<PODConditionVariable> PODConsumableEvent;
+	typedef PODConsumableEventPattern<PODConditionVariable> PODConsumableEvent;
 	/** POD event type supporting only one waiting coroutine. */
-	typedef PODEventBase<PODFIFOConditionVariable> PODFIFOEvent;
+	typedef PODEventPattern<PODFIFOConditionVariable> PODFIFOEvent;
 	/** POD consumable event type supporting only one waiting coroutine. */
-	typedef PODConsumableEventBase<PODFIFOConditionVariable> PODFIFOConsumableEvent;
+	typedef PODConsumableEventPattern<PODFIFOConditionVariable> PODFIFOConsumableEvent;
 
 	/** Event type. */
-	typedef EventBase<PODConditionVariable> Event;
+	typedef EventPattern<PODConditionVariable> Event;
 	/** Consumable event type. */
-	typedef ConsumableEventBase<PODConditionVariable> ConsumableEvent;
+	typedef ConsumableEventPattern<PODConditionVariable> ConsumableEvent;
 	/** Event type supporting only one waiting coroutine. */
-	typedef EventBase<PODFIFOConditionVariable> FIFOEvent;
+	typedef EventPattern<PODFIFOConditionVariable> FIFOEvent;
 	/** Consumable event type supporting only one waiting coroutine. */
-	typedef ConsumableEventBase<PODFIFOConditionVariable> FIFOConsumableEvent;
+	typedef ConsumableEventPattern<PODFIFOConditionVariable> FIFOConsumableEvent;
 }
 
 #include "Event.inl"

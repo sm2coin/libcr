@@ -4,7 +4,7 @@
 namespace cr::mt
 {
 	template<class ConditionVariable>
-	void PODEventBase<ConditionVariable>::initialise(
+	void PODEventPattern<ConditionVariable>::initialise(
 		bool active)
 	{
 		m_cv.initialise();
@@ -14,7 +14,7 @@ namespace cr::mt
 	}
 
 	template<class ConditionVariable>
-	void PODEventBase<ConditionVariable>::fire()
+	void PODEventPattern<ConditionVariable>::fire()
 	{
 		for(;;)
 		{
@@ -37,13 +37,13 @@ namespace cr::mt
 	}
 
 	template<class ConditionVariable>
-	void PODEventBase<ConditionVariable>::clear()
+	void PODEventPattern<ConditionVariable>::clear()
 	{
 		m_active.store(false, std::memory_order_relaxed);
 	}
 
 	template<class ConditionVariable>
-	sync::mayblock PODEventBase<ConditionVariable>::WaitCall::libcr_wait(
+	sync::mayblock PODEventPattern<ConditionVariable>::WaitCall::libcr_wait(
 		Coroutine * coroutine)
 	{
 		// `compare_exchange_strong` is used to enforce stronger synchronisation than `load`.
@@ -86,13 +86,13 @@ namespace cr::mt
 	}
 
 	template<class ConditionVariable>
-	EventBase<ConditionVariable>::EventBase()
+	EventPattern<ConditionVariable>::EventPattern()
 	{
-		PODEventBase<ConditionVariable>::initialise();
+		PODEventPattern<ConditionVariable>::initialise();
 	}
 
 	template<class ConditionVariable>
-	void PODConsumableEventBase<ConditionVariable>::fire()
+	void PODConsumableEventPattern<ConditionVariable>::fire()
 	{
 		if(m_cv.notify_one())
 			return;
@@ -128,7 +128,7 @@ namespace cr::mt
 	}
 
 	template<class ConditionVariable>
-	sync::mayblock PODConsumableEventBase<ConditionVariable>::ConsumeCall::libcr_wait(
+	sync::mayblock PODConsumableEventPattern<ConditionVariable>::ConsumeCall::libcr_wait(
 		Coroutine * coroutine)
 	{
 		// Set the event to inactive.
@@ -158,7 +158,7 @@ namespace cr::mt
 	}
 
 	template<class ConditionVariable>
-	bool PODConsumableEventBase<ConditionVariable>::try_consume()
+	bool PODConsumableEventPattern<ConditionVariable>::try_consume()
 	{
 		bool active = true;
 		return m_active.compare_exchange_strong(
@@ -169,18 +169,18 @@ namespace cr::mt
 	}
 
 	template<class ConditionVariable>
-	ConsumableEventBase<ConditionVariable>::ConsumableEventBase()
+	ConsumableEventPattern<ConditionVariable>::ConsumableEventPattern()
 	{
-		PODConsumableEventBase<ConditionVariable>::initialise();
+		PODConsumableEventPattern<ConditionVariable>::initialise();
 	}
 
-	template class PODEventBase<PODConditionVariable>;
-	template class PODEventBase<PODFIFOConditionVariable>;
-	template class PODConsumableEventBase<PODConditionVariable>;
-	template class PODConsumableEventBase<PODFIFOConditionVariable>;
+	template class PODEventPattern<PODConditionVariable>;
+	template class PODEventPattern<PODFIFOConditionVariable>;
+	template class PODConsumableEventPattern<PODConditionVariable>;
+	template class PODConsumableEventPattern<PODFIFOConditionVariable>;
 
-	template class EventBase<PODConditionVariable>;
-	template class EventBase<PODFIFOConditionVariable>;
-	template class ConsumableEventBase<PODConditionVariable>;
-	template class ConsumableEventBase<PODFIFOConditionVariable>;
+	template class EventPattern<PODConditionVariable>;
+	template class EventPattern<PODFIFOConditionVariable>;
+	template class ConsumableEventPattern<PODConditionVariable>;
+	template class ConsumableEventPattern<PODFIFOConditionVariable>;
 }

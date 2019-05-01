@@ -14,11 +14,11 @@ namespace cr::sync
 		The promise's value type.
 	@tparam Event:
 		The promise's future's event flavour. */
-	class PODPromiseBaseBase
+	class PODPromiseBasePattern
 	{
 	protected:
 		/** The promise's future. */
-		PODFutureBase<T, Event> * m_future;
+		PODFuturePattern<T, Event> * m_future;
 	public:
 		/** Initialises the promise without a future. */
 		void initialise();
@@ -26,12 +26,12 @@ namespace cr::sync
 		@param[in] future:
 			The future to use with this promise. */
 		void initialise(
-			PODFutureBase<T, Event> * future);
+			PODFuturePattern<T, Event> * future);
 		/** Initialises the promise to be bound to the given future.
 		@param[in] future:
 			The future to use with this promise. */
 		inline void initialise(
-			FutureBase<T, Event> * future);
+			FuturePattern<T, Event> * future);
 	};
 
 	template<class T, class Event>
@@ -40,17 +40,17 @@ namespace cr::sync
 		The promise's value type.
 	@tparam Event:
 		The promise's future's event flavour. */
-	class PODPromiseBase;
+	class PODPromisePattern;
 
 	template<class Event>
 	/** POD value-less promise type.
 	@tparam Event:
 		The promise's future's even flavour. */
-	class PODPromiseBase<void, Event> : PODPromiseBaseBase<void, Event>
+	class PODPromisePattern<void, Event> : PODPromiseBasePattern<void, Event>
 	{
-		using PODPromiseBaseBase<void, Event>::m_future;
+		using PODPromiseBasePattern<void, Event>::m_future;
 	public:
-		using PODPromiseBaseBase<void, Event>::initialise;
+		using PODPromiseBasePattern<void, Event>::initialise;
 
 		/** Fulfills the promise.
 			The promise must be bound to a future. */
@@ -58,11 +58,11 @@ namespace cr::sync
 	};
 
 	template<class T, class Event>
-	class PODPromiseBase : PODPromiseBaseBase<T, Event>
+	class PODPromisePattern : PODPromiseBasePattern<T, Event>
 	{
-		using PODPromiseBaseBase<T, Event>::m_future;
+		using PODPromiseBasePattern<T, Event>::m_future;
 	public:
-		using PODPromiseBaseBase<T, Event>::initialise;
+		using PODPromiseBasePattern<T, Event>::initialise;
 
 		/** Fulfills the promise.
 			The promise must be bound to a future.
@@ -84,44 +84,44 @@ namespace cr::sync
 		The promise's value type.
 	@tparam Event:
 		The promise's future's event flavour. */
-	class PromiseBase : PODPromiseBase<T, Event>
+	class PromisePattern : PODPromisePattern<T, Event>
 	{
 	public:
-		using PODPromiseBase<T, Event>::fulfill;
+		using PODPromisePattern<T, Event>::fulfill;
 		/** Initialises the promise without a future. */
-		PromiseBase();
+		PromisePattern();
 		/** Initialises the promise to be bound to the given future.
 		@param[in] future:
 			The future to use with this promise. */
-		PromiseBase(
-			PODFutureBase<T, Event> * future);
+		PromisePattern(
+			PODFuturePattern<T, Event> * future);
 		/** Initialises the promise to be bound to the given future.
 		@param[in] future:
 			The future to use with this promise. */
-		PromiseBase(
-			FutureBase<T, Event> * future);
+		PromisePattern(
+			FuturePattern<T, Event> * future);
 	};
 
 	template<class T>
 	/** POD promise type.
 	@tparam T:
 		The promise's value type. */
-	using PODPromise = PODPromiseBase<T, PODEvent>;
+	using PODPromise = PODPromisePattern<T, PODEvent>;
 	template<class T>
 	/** POD promise type supporting only one waiting coroutine.
 	@tparam T:
 		The promise's value type. */
-	using PODFIFOPromise = PODPromiseBase<T, PODFIFOEvent>;
+	using PODFIFOPromise = PODPromisePattern<T, PODFIFOEvent>;
 	template<class T>
 	/** Promise type.
 	@tparam T:
 		The promise's value type. */
-	using Promise = PromiseBase<T, PODEvent>;
+	using Promise = PromisePattern<T, PODEvent>;
 	template<class T>
 	/** Promise type supporting only one waiting coroutine.
 	@tparam T:
 		The promise's value type. */
-	using FIFOPromise = PromiseBase<T, PODFIFOEvent>;
+	using FIFOPromise = PromisePattern<T, PODFIFOEvent>;
 }
 
 #include "Promise.inl"

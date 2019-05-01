@@ -4,14 +4,14 @@
 namespace cr::mt
 {
 	template<class ConditionVariable>
-	void PODBarrierBase<ConditionVariable>::initialise()
+	void PODBarrierPattern<ConditionVariable>::initialise()
 	{
 		m_cv.initialise();
 		std::atomic_init(&m_count, (std::size_t) 0);
 	}
 
 	template<class ConditionVariable>
-	void PODBarrierBase<ConditionVariable>::initialise(
+	void PODBarrierPattern<ConditionVariable>::initialise(
 		std::size_t count)
 	{
 		m_cv.initialise();
@@ -19,7 +19,7 @@ namespace cr::mt
 	}
 
 	template<class ConditionVariable>
-	void PODBarrierBase<ConditionVariable>::set(
+	void PODBarrierPattern<ConditionVariable>::set(
 		std::size_t count)
 	{
 		m_count.store(count, std::memory_order_relaxed);
@@ -28,7 +28,7 @@ namespace cr::mt
 	}
 
 	template<class ConditionVariable>
-	sync::mayblock PODBarrierBase<ConditionVariable>::WaitCall::libcr_wait(
+	sync::mayblock PODBarrierPattern<ConditionVariable>::WaitCall::libcr_wait(
 		Coroutine * coroutine)
 	{
 		std::size_t count = 1;
@@ -59,20 +59,20 @@ namespace cr::mt
 	}
 
 	template<class ConditionVariable>
-	BarrierBase<ConditionVariable>::BarrierBase()
+	BarrierPattern<ConditionVariable>::BarrierPattern()
 	{
-		PODBarrierBase<ConditionVariable>::initialise();
+		PODBarrierPattern<ConditionVariable>::initialise();
 	}
 
 	template<class ConditionVariable>
-	BarrierBase<ConditionVariable>::BarrierBase(
+	BarrierPattern<ConditionVariable>::BarrierPattern(
 		std::size_t count)
 	{
-		PODBarrierBase<ConditionVariable>::initialise(count);
+		PODBarrierPattern<ConditionVariable>::initialise(count);
 	}
 
-	template class PODBarrierBase<PODConditionVariable>;
-	template class PODBarrierBase<PODFIFOConditionVariable>;
-	template class BarrierBase<PODConditionVariable>;
-	template class BarrierBase<PODFIFOConditionVariable>;
+	template class PODBarrierPattern<PODConditionVariable>;
+	template class PODBarrierPattern<PODFIFOConditionVariable>;
+	template class BarrierPattern<PODConditionVariable>;
+	template class BarrierPattern<PODFIFOConditionVariable>;
 }

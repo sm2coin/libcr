@@ -1,31 +1,31 @@
 namespace cr::sync
 {
 	template<class ConditionVariable>
-	constexpr PODEventBase<ConditionVariable>::WaitCall::WaitCall(
-		PODEventBase<ConditionVariable> &event):
+	constexpr PODEventPattern<ConditionVariable>::WaitCall::WaitCall(
+		PODEventPattern<ConditionVariable> &event):
 		m_event(event)
 	{
 	}
 
 	template<class ConditionVariable>
 	constexpr
-		typename PODEventBase<ConditionVariable>::WaitCall
-		PODEventBase<ConditionVariable>::wait()
+		typename PODEventPattern<ConditionVariable>::WaitCall
+		PODEventPattern<ConditionVariable>::wait()
 	{
 		return WaitCall(*this);
 	}
 
 	template<class ConditionVariable>
-	constexpr PODConsumableEventBase<ConditionVariable>::ConsumeCall::ConsumeCall(
-		PODConsumableEventBase<ConditionVariable> &event):
+	constexpr PODConsumableEventPattern<ConditionVariable>::ConsumeCall::ConsumeCall(
+		PODConsumableEventPattern<ConditionVariable> &event):
 		m_event(event)
 	{
 	}
 
 	template<class ConditionVariable>
 	constexpr
-		typename PODConsumableEventBase<ConditionVariable>::ConsumeCall
-		PODConsumableEventBase<ConditionVariable>::consume()
+		typename PODConsumableEventPattern<ConditionVariable>::ConsumeCall
+		PODConsumableEventPattern<ConditionVariable>::consume()
 	{
 		return ConsumeCall(*this);
 	}

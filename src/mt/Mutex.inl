@@ -1,25 +1,25 @@
 namespace cr::mt
 {
 	template<class ConditionVariable>
-	bool PODMutexBase<ConditionVariable>::try_lock()
+	bool PODMutexPattern<ConditionVariable>::try_lock()
 	{
-		return PODConsumableEventBase<ConditionVariable>::try_consume();
+		return PODConsumableEventPattern<ConditionVariable>::try_consume();
 	}
 
 	template<class ConditionVariable>
-	typename PODConsumableEventBase<ConditionVariable>::ConsumeCall PODMutexBase<ConditionVariable>::lock()
+	typename PODConsumableEventPattern<ConditionVariable>::ConsumeCall PODMutexPattern<ConditionVariable>::lock()
 	{
-		return PODConsumableEventBase<ConditionVariable>::consume();
+		return PODConsumableEventPattern<ConditionVariable>::consume();
 	}
 
 	template<class ConditionVariable>
-	void PODMutexBase<ConditionVariable>::unlock()
+	void PODMutexPattern<ConditionVariable>::unlock()
 	{
-		PODConsumableEventBase<ConditionVariable>::clear();
+		PODConsumableEventPattern<ConditionVariable>::clear();
 	}
 
 	template<class ConditionVariable>
-	MutexBase<ConditionVariable>::MutexBase()
+	MutexPattern<ConditionVariable>::MutexPattern()
 	{
 		initialise();
 	}

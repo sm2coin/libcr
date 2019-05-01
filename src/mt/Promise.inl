@@ -3,35 +3,35 @@
 namespace cr::mt
 {
 	template<class T, class Event>
-	void PODPromiseBaseBase<T, Event>::initialise()
+	void PODPromiseBasePattern<T, Event>::initialise()
 	{
 		m_future = nullptr;
 	}
 
 	template<class T, class Event>
-	void PODPromiseBaseBase<T, Event>::initialise(
-		PODFutureBase<T, Event> * future)
+	void PODPromiseBasePattern<T, Event>::initialise(
+		PODFuturePattern<T, Event> * future)
 	{
 		assert(future != nullptr);
 		m_future = future;
 	}
 
 	template<class T, class Event>
-	void PODPromiseBaseBase<T, Event>::initialise(
-		FutureBase<T, Event> * future)
+	void PODPromiseBasePattern<T, Event>::initialise(
+		FuturePattern<T, Event> * future)
 	{
-		initialise(static_cast<PODFutureBase<T, Event> *>(future));
+		initialise(static_cast<PODFuturePattern<T, Event> *>(future));
 	}
 
 	template<class Event>
-	void PODPromiseBase<void, Event>::fulfill()
+	void PODPromisePattern<void, Event>::fulfill()
 	{
 		assert(m_future != nullptr);
 		m_future->fulfill();
 	}
 
 	template<class T, class Event>
-	void PODPromiseBase<T, Event>::fulfill(
+	void PODPromisePattern<T, Event>::fulfill(
 		T const& value)
 	{
 		assert(m_future != nullptr);
@@ -39,7 +39,7 @@ namespace cr::mt
 	}
 
 	template<class T, class Event>
-	void PODPromiseBase<T, Event>::fulfill(
+	void PODPromisePattern<T, Event>::fulfill(
 		T && value)
 	{
 		assert(m_future != nullptr);
@@ -47,22 +47,22 @@ namespace cr::mt
 	}
 
 	template<class T, class Event>
-	PromiseBase<T, Event>::PromiseBase()
+	PromisePattern<T, Event>::PromisePattern()
 	{
-		PODPromiseBase<T, Event>::initialise();
+		PODPromisePattern<T, Event>::initialise();
 	}
 
 	template<class T, class Event>
-	PromiseBase<T, Event>::PromiseBase(
-		PODFutureBase<T, Event> * future)
+	PromisePattern<T, Event>::PromisePattern(
+		PODFuturePattern<T, Event> * future)
 	{
-		PODPromiseBase<T, Event>::initialise(future);
+		PODPromisePattern<T, Event>::initialise(future);
 	}
 
 	template<class T, class Event>
-	PromiseBase<T, Event>::PromiseBase(
-		FutureBase<T, Event> * future)
+	PromisePattern<T, Event>::PromisePattern(
+		FuturePattern<T, Event> * future)
 	{
-		PODPromiseBase<T, Event>::initialise(future);
+		PODPromisePattern<T, Event>::initialise(future);
 	}
 }
