@@ -1,6 +1,16 @@
 cmake_minimum_required(VERSION 2.6)
 project(libcr)
 
+# Ensure all dependencies are existent.
+execute_process(
+	COMMAND git submodule init
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+execute_process(
+	COMMAND git submodule update
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_subdirectory(depend/timer)
+
 OPTION(LIBCR_RELEASE OFF)
 
 set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -Wextra -Werror -g")
@@ -19,3 +29,4 @@ add_library(libcr STATIC ${libcr_sources} ${libcr_headers})
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/src/ DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include/libcr/ FILES_MATCHING PATTERN "*.hpp" PATTERN "*.inl")
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include/libcr/)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/depend/timer/include/ DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include/)
