@@ -21,7 +21,7 @@ namespace cr::util
 	template<> struct AddCVPOD<mt::ConditionVariable> { typedef mt::PODConditionVariable type; };
 	template<> struct RemoveCVPOD<mt::PODFIFOConditionVariable> { typedef mt::FIFOConditionVariable type; };
 	template<> struct AddCVPOD<mt::PODFIFOConditionVariable> { typedef mt::PODFIFOConditionVariable type; };
-	template<> struct RemoveCVPOD<mt::FIFOConditionVariable> { typedef mt::PODFIFOConditionVariable type; };
+	template<> struct RemoveCVPOD<mt::FIFOConditionVariable> { typedef mt::FIFOConditionVariable type; };
 	template<> struct AddCVPOD<mt::FIFOConditionVariable> { typedef mt::PODFIFOConditionVariable type; };
 
 	template<> struct RemoveCVPOD<sync::PODConditionVariable> { typedef sync::ConditionVariable type; };
@@ -30,7 +30,7 @@ namespace cr::util
 	template<> struct AddCVPOD<sync::ConditionVariable> { typedef sync::PODConditionVariable type; };
 	template<> struct RemoveCVPOD<sync::PODFIFOConditionVariable> { typedef sync::FIFOConditionVariable type; };
 	template<> struct AddCVPOD<sync::PODFIFOConditionVariable> { typedef sync::PODFIFOConditionVariable type; };
-	template<> struct RemoveCVPOD<sync::FIFOConditionVariable> { typedef sync::PODFIFOConditionVariable type; };
+	template<> struct RemoveCVPOD<sync::FIFOConditionVariable> { typedef sync::FIFOConditionVariable type; };
 	template<> struct AddCVPOD<sync::FIFOConditionVariable> { typedef sync::PODFIFOConditionVariable type; };
 
 	template<class ConditionVariable>
