@@ -40,9 +40,10 @@ This means that even greater multitasking can be achieved when using libcr with 
 Of course, libcr also has a thread-unsafe implementation for even faster task switching on single-threaded systems or when it is clear that every coroutine will stay in the thread it was created in.
 
 **Speed**&ensp;
-According to benchmarks performed on an Intel(R) Core(TM) i7-8700 CPU (3.20GHz), task switching with coroutines is around 125 times faster than kernel task switches when running in a single thread (we measured 50MHz [20ns] for thread-unsafe task switches for coroutines, and around 400kHz (2.5µs) for kernel task switches [thread synchronisations] on the same machine).
-We also measured 17MHz (59ns) for thread-safe coroutine context switches in a single thread on the same machine.
-Since coroutines can run in multiple threads, this speed scales with the number of cores.
+According to benchmarks performed on an Intel(R) Core(TM) i7-8700 CPU (3.20GHz), task switching with coroutines is around 837.5 times faster than kernel task switches when running in a single thread (we measured 335MHz [3ns] for thread-unsafe task switches for coroutines, and around 400kHz (2.5µs) for kernel task switches [thread synchronisations] on the same machine (in realease mode)).
+We also measured 80MHz (12ns) for thread-safe coroutine context switches in a single thread on the same machine (release mode).
+Using all 12 of the CPU's threads, we achieved 166MHz (6ns) for thread-safe context switches (release mode).
+The high performance makes libcr very appropriate for massively parallel programming.
 
 **No dynamic allocations**&ensp;
 In libcr, nothing is allocated dynamically, which gives the user maximum freedom to control the performance.
