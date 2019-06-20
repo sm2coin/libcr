@@ -1,6 +1,9 @@
 # Introduction to libcr
 
-In this document, a short introduction to the syntax of libcr is given.
+In this document, a short introduction to libcr's syntax and main commands is given.
+Everything is explained using code examples.
+The comments explain every part of the code, with some background information given where appropriate.
+
 Note that macro names are prefixed with `#`, so that if you use doxygen, they create links to the macros' documentations (the `#` no longer shows up in doxygen).
 Also note that this is example code, and might contain all kinds of errors.
 It is just meant to give a general impression of how to use the library.
@@ -13,7 +16,10 @@ A coroutine is created as follows:
 
 ~~~cpp
 
-typedef cr::SchedulerBase<cr::mt::ConditionVariable> SchedulerType;
+/* Include all libcr headers. */
+#include <libcr/libcr.hpp>
+
+typedef cr::mt::FIFOScheduler SchedulerType;
 
 /* ACoroutine is the type of the coroutine, and SchedulerType
    is the type of the scheduler we want to use. This can also
@@ -43,10 +49,11 @@ CR_INLINE
    time the scheduler is called. */
 		CR_YIELD;
 	}
-/* This section is called by libcr when the coroutine
+/* This section is executed by libcr when the coroutine
    finishes its execution, just before returning. It should
    release all resources held by the coroutine. This section
-   is mandatory. */
+   is mandatory. It must never contain any return/throw/yield
+   or await statements. */
 CR_FINALLY
 /* This marks the end of the coroutine implementation. It is
    and implicit return statement and returns to the calling
@@ -87,6 +94,7 @@ Here, we learned multiple things:
 * Local variables have to be put into the `#CR_STATE` section, as yielding destroys native local variables.
 	This serves two purposes: It separates the public section of the coroutine state from its private, internal state, and it makes it easier to read the code.
 * `#CR_INLINE` and `#CR_INLINE_END` are used to hide the boilerplate of the coroutine implementation.
+* `#CR_FINALLY` contains cleanup code and is always called before the coroutine finishes execution (even if there is an error).
 
 ## 2. Nesting coroutines
 
@@ -178,6 +186,13 @@ int main(int argc, char ** argv)
 	}
 }
 ~~~
+
+Here, we learned:
+
+* How to nest coroutines,
+* How to use true local variables for temporary values to reduce the coroutine size.
+* How to throw errors using `#CR_THROW`.
+* How to catch errors using the optional argument of `#CR_AWAIT` and `#CR_CALL`.
 
 ## 3. Separating declaration and implementation
 
