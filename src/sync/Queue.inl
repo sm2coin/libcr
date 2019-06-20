@@ -51,6 +51,7 @@ namespace cr::sync
 		if(queue->m_values.size() == queue->m_end)
 			queue->m_end = 0;
 		queue->push();
+	CR_FINALLY
 	CR_IMPL_END
 
 	template<class T, std::size_t kSize, class Semaphore>
@@ -60,6 +61,7 @@ namespace cr::sync
 		if(queue->m_values.size() == queue->m_start)
 			queue->m_start = 0;
 		queue->pop();
+	CR_FINALLY
 	CR_IMPL_END
 
 	template<std::size_t kSize, class Semaphore>
@@ -72,12 +74,14 @@ namespace cr::sync
 	CR_IMPL(PODFixedQueuePattern<void, kSize, Semaphore>::Push)
 		CR_AWAIT(queue->free());
 		queue->push();
+	CR_FINALLY
 	CR_IMPL_END
 
 	template<std::size_t kSize, class Semaphore>
 	CR_IMPL(PODFixedQueuePattern<void, kSize, Semaphore>::Pop)
 		CR_AWAIT(queue->elements());
 		queue->pop();
+	CR_FINALLY
 	CR_IMPL_END
 
 	template<class T, std::size_t kSize, class Semaphore>

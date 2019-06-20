@@ -25,6 +25,6 @@ namespace cr
 		libcr_coroutine = coroutine;
 		libcr_error = false;
 		// Leave libcr_next_waiting uninitialised!
-		libcr_thread = detail::Thread::kInvalid;
+		libcr_thread = parent->libcr_thread;
 	}
 }

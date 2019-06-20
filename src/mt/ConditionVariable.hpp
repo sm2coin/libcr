@@ -4,14 +4,14 @@
 #define __libcr_mt_conditionvariable_hpp_defined
 
 #include "../sync/Block.hpp"
-#include "../Scheduler.hpp"
 
-#include <mutex>
 #include <atomic>
 
 namespace cr
 {
 	class Coroutine;
+	template<class ConditionVariable>
+	class SchedulerPattern;
 }
 
 namespace cr::mt

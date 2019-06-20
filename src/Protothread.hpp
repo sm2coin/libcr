@@ -4,6 +4,7 @@
 #define __libcr_protothread_hpp_defined
 
 #include "helpermacros.hpp"
+#include <cinttypes>
 
 
 #ifdef LIBCR_DEBUG
@@ -15,9 +16,13 @@
 
 namespace cr
 {
+#ifdef LIBCR_COMPACT_IP
+	typedef std::uint16_t ip_t;
+#else
 	/** Instruction pointer type.
 		This is used to save the execution of a protothread. */
 	typedef void *ip_t;
+#endif
 
 	/** Basic protothread state. */
 	class Protothread

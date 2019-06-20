@@ -1,7 +1,7 @@
 /** @file RefConv.hpp
 	Contains helper types that convert reference types to appropriate types when passed as arguments to coroutines. */
-#ifndef __libcr_util_reftoptr_hpp_defined
-#define __libcr_util_reftoptr_hpp_defined
+#ifndef __libcr_util_refconv_hpp_defined
+#define __libcr_util_refconv_hpp_defined
 
 #include <utility>
 

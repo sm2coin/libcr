@@ -11,12 +11,17 @@ execute_process(
 
 add_subdirectory(depend/timer)
 
-OPTION(LIBCR_RELEASE OFF)
+OPTION(LIBCR_RELEASE OFF "Whether to compile libcr in release mode")
+OPTION(LIBCR_COMPACT_IP OFF "Whether to enable compact instruction pointers")
 
 set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -Wextra -Werror -g")
 
 if(LIBCR_RELEASE)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLIBCR_RELEASE=1 -O3 -mtune=native")
+endif()
+
+if(COMPACT_IP)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLIBCR_COMPACT_IP")
 endif()
 
 # Select all source files.

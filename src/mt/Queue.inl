@@ -41,6 +41,7 @@ namespace cr::mt
 			queue->m_values[detail::inc_wrap(queue->m_values, queue->m_end)],
 			std::forward<V>(value));
 		queue->push();
+	CR_FINALLY
 	CR_IMPL_END
 
 	template<class T, std::size_t kSize, class Semaphore>
@@ -51,6 +52,7 @@ namespace cr::mt
 			std::move(
 				queue->m_values[detail::inc_wrap(queue->m_values, queue->m_start)]));
 		queue->pop();
+	CR_FINALLY
 	CR_IMPL_END
 
 	template<std::size_t kSize, class Semaphore>
@@ -63,12 +65,14 @@ namespace cr::mt
 	CR_IMPL(PODFixedQueuePattern<void, kSize, Semaphore>::Push)
 		CR_AWAIT(queue->free());
 		queue->push();
+	CR_FINALLY
 	CR_IMPL_END
 
 	template<std::size_t kSize, class Semaphore>
 	CR_IMPL(PODFixedQueuePattern<void, kSize, Semaphore>::Pop)
 		CR_AWAIT(queue->elements());
 		queue->pop();
+	CR_FINALLY
 	CR_IMPL_END
 
 	template<class T, std::size_t kSize, class Semaphore>

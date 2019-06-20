@@ -81,7 +81,7 @@
 	Returns from a coroutine to the caller or its parent coroutine. Marks the coroutine as "done", and the coroutine must not be called again. */
 #define CR_RETURN do { \
 	LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_RETURN"); \
-	goto cr_label_return; \
+	goto cr_label_finally; \
 } while(0)
 
 /** @def PT_RETURN
@@ -169,6 +169,17 @@
 		} while(0)
 
 
+/** @def CR_FINALLY
+	Begins a section of code that is always executed just before returning to the parent coroutine, regardless of whether `CR_RETURN` or `CR_THROW` were used.
+	This should be used to clean up the coroutine's resources. Neither `#CR_AWAIT` nor `#CR_RETURN` nor `#CR_YIELD` may be used inside this section. The coroutine object can be safely deleted inside this section. */
+#define CR_FINALLY do { \
+			LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_FINALLY"); \
+		cr_label_finally: \
+			::cr::Coroutine * const libcr_parent = ::cr::Coroutine::libcr_parent; \
+			if(libcr_parent) \
+				libcr_parent->libcr_thread = ::cr::Coroutine::libcr_thread;
+
+
 /** @def PT_IMPL_END
 	Marks the end of a protothread implementation. */
 /** @def CR_IMPL_END
@@ -188,24 +199,17 @@
 	}
 
 	#define CR_IMPL_END LIBCR_HELPER_IMPL_END(__COUNTER__)
-	#define LIBCR_HELPER_IMPL_END(id) do { \
+	#define LIBCR_HELPER_IMPL_END(id) \
 			LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_IMPL_END"); \
-			LIBCR_HELPER_SAVE(id); \
 			/* To suppress the "unused" warning on the label. */ \
 			goto cr_label_return; \
+			/* Force an error if there is no CR_FINALLY statement. */ \
+			goto cr_label_finally; \
 		cr_label_return: \
-			if(::cr::Coroutine::libcr_parent) \
-			{ \
-				::cr::Coroutine &parent = *::cr::Coroutine::libcr_parent; \
-				parent.libcr_thread = ::cr::Coroutine::libcr_thread; \
-				cr_destroy(); \
-				parent(); \
-				return; \
-			} else \
-			{ \
-				cr_destroy(); \
-				return; \
-			} \
+			LIBCR_HELPER_SAVE(id); \
+				if(libcr_parent) \
+					(*libcr_parent)(); \
+			return; \
 		LIBCR_HELPER_LABEL(id): \
 			assert(!"COROUTINE coroutine called after return."); \
 		} while(0); \
@@ -219,31 +223,31 @@
 			return true; \
 		} while(0); \
 	}
-	#define CR_IMPL_END do { \
+	#define CR_IMPL_END \
 			LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_IMPL_END"); \
 			/* To suppress the "unused" warning on the label. */ \
 			goto cr_label_return; \
+			/* Force an error if there is no CR_FINALLY statement. */ \
+			goto cr_label_finally; \
 		cr_label_return: \
-			if(::cr::Coroutine::libcr_parent) \
-			{ \
-				::cr::Coroutine &parent = *::cr::Coroutine::libcr_parent; \
-				parent.libcr_thread = ::cr::Coroutine::libcr_thread; \
-				cr_destroy(); \
-				parent(); \
-				return; \
-			} else \
-			{ \
-				cr_destroy(); \
-				return; \
-			} \
+			if(libcr_parent) \
+				(*libcr_parent)(); \
 		} while(0); \
 	}
 #endif
 
+#ifdef LIBCR_COMPACT_IP
+#define LIBCR_HELPER_INTRO do { \
+	LIBCR_HELPER_LABEL(start): \
+	if(::cr::Protothread::libcr_instruction_pointer) \
+		CR_RESTORE; \
+} while(0)
+#else
 #define LIBCR_HELPER_INTRO do { \
 	if(::cr::Protothread::libcr_instruction_pointer) \
 		CR_RESTORE; \
 } while(0)
+#endif
 
 /** @def CR_IMPL(name)
 	Starts the external implementation of the given coroutine. Must be followed by `#CR_IMPL_END`. */

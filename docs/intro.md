@@ -33,10 +33,6 @@ COROUTINE(ACoroutine, SchedulerType)
 CR_STATE((int) limit)
 	int i;
 
-/* This function is called by libcr when the coroutine
-   finishes its execution, just before returning. It should
-   release all resources held by the coroutine. */
-	void cr_destroy() {}
 /* CR_INLINE allows us to implement the coroutine directly in
    its declaration. */
 CR_INLINE
@@ -47,8 +43,14 @@ CR_INLINE
    time the scheduler is called. */
 		CR_YIELD;
 	}
+/* This section is called by libcr when the coroutine
+   finishes its execution, just before returning. It should
+   release all resources held by the coroutine. This section
+   is mandatory. */
+CR_FINALLY
 /* This marks the end of the coroutine implementation. It is
-   and implicit return statement. */
+   and implicit return statement and returns to the calling
+   coroutine (if any). */
 CR_INLINE_END
 
 int main(int argc, char ** argv)
@@ -97,8 +99,6 @@ CR_STATE(
 	(Connection *) connection,
 	(void *) destination,
 	(std::size_t) size)
-
-	void cr_destroy() {}
 CR_INLINE
 	while(size)
 	{
@@ -121,6 +121,7 @@ CR_INLINE
 		reinterpret_cast<char *&>(destination) += received;
 		size -= received;
 	}
+CR_FINALLY
 CR_INLINE_END
 
 COROUTINE(GetMessage, void)
@@ -135,7 +136,6 @@ CR_STATE((Connection *) connection)
    coroutines that are invoked sequentially take up less
    space. */
 	Receive receive;
-	void cr_destroy() {}
 CR_INLINE
 /* This macro calls a coroutine in a syntax that resembles a
    normal function call. Note that no additional first
@@ -154,6 +154,7 @@ CR_INLINE
 	message[sizeof(message)-1] = '\0';
 	success = true;
 	connection->close();
+CR_FINALLY
 CR_INLINE_END
 
 int main(int argc, char ** argv)
@@ -190,8 +191,6 @@ CR_STATE(
 	(int) x,
 	(int) y,
 	(int) z)
-	
-	void cr_destroy() {}
 /* This macro marks the coroutine implementation as external,
    just like it is done in classes. */
 CR_EXTERNAL
@@ -205,6 +204,7 @@ And somewhere else, in some other file:
 CR_IMPL(Something)
 	// Please imagine something meaningful here.
 
+CR_FINALLY
 /* This macro marks the end of a coroutine's external
    implementation. */
 CR_IMPL_END
@@ -223,5 +223,6 @@ CR_EXTERNAL
 
 template<class T, class size>
 CR_IMPL(Coroutine<T, size>)
+CR_FINALLY
 CR_IMPL_END
 ~~~

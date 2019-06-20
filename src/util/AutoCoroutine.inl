@@ -23,14 +23,10 @@ namespace cr::util
 	}
 
 	template<class Coroutine>
-	void AutoCoroutine<Coroutine>::cr_destroy()
-	{
-		delete this;
-	}
-
-	template<class Coroutine>
 	CR_IMPL(AutoCoroutine<Coroutine>)
 		CR_CALL_PREPARED(coroutine);
+	CR_FINALLY
+		delete this;
 	CR_IMPL_END
 
 	template<class Coroutine>

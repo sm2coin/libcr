@@ -40,8 +40,6 @@ namespace cr::mt
 		CR_STATE(
 			(PODFixedQueuePattern<T, kSize, Semaphore> &) queue,
 			(V) value);
-
-			void cr_destroy() {}
 		CR_EXTERNAL
 
 		union Push {
@@ -54,8 +52,6 @@ namespace cr::mt
 		CR_STATE(
 			(PODFixedQueuePattern<T, kSize, Semaphore> &) queue,
 			(T &) target);
-
-			void cr_destroy() {}
 		CR_EXTERNAL
 	};
 
@@ -68,15 +64,11 @@ namespace cr::mt
 		COROUTINE(Push, void)
 		CR_STATE(
 			(PODFixedQueuePattern<void, kSize, Semaphore> &) queue);
-
-			void cr_destroy() {}
 		CR_EXTERNAL
 
 		COROUTINE(Pop, void)
 		CR_STATE(
 			(PODFixedQueuePattern<void, kSize, Semaphore> &) queue);
-
-			void cr_destroy() {}
 		CR_EXTERNAL
 	};
 

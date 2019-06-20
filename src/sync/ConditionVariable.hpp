@@ -4,11 +4,12 @@
 #define __libcr_sync_conditionvariable_hpp_defined
 
 #include "Block.hpp"
-#include "../Scheduler.hpp"
 
 namespace cr
 {
 	class Coroutine;
+	template<class ConditionVariable>
+	class SchedulerPattern;
 }
 
 namespace cr::sync

@@ -23,6 +23,15 @@ namespace cr
 			This is used to call coroutines of unknown deriving type. */
 		typedef void (Coroutine::*impl_t)();
 
+		// Place the non-word fields first, so that they harmonise with CR_COMPACT_IP.
+
+		/** The thread the coroutine is currently owned by. */
+		detail::Thread libcr_thread;
+		/** Error flag that can be set when a blocking operation fails. */
+		bool libcr_error;
+
+		// Word-sized fields last.
+
 		/** The coroutine's "thread_local" storage. */
 		Context * libcr_context;
 		/** The coroutine's parent coroutine (or null). */
@@ -30,10 +39,6 @@ namespace cr
 		/** The coroutine implementation.
 			Used to enter a coroutine. */
 		impl_t libcr_coroutine;
-		/** Error flag that can be set when a blocking operation fails. */
-		bool libcr_error;
-		/** The thread the coroutine is currently owned by. */
-		detail::Thread libcr_thread;
 		/** When waiting for a resource, the next coroutine in line, or null if last. */
 		detail::NextPointer libcr_next_waiting;
 
