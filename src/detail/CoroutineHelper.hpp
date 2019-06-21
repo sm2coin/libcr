@@ -63,6 +63,29 @@ namespace cr::detail
 		/** Starts the coroutine after `prepare()` has been called.
 			This should only be called once per coroutine! */
 		inline void start_prepared();
+
+		/** Helper type to start a child coroutine. */
+		class LibcrChildStartCall
+		{
+			Coroutine * m_parent;
+			DerivedCoroutine * m_child;
+		public:
+			constexpr LibcrChildStartCall(
+				Coroutine * parent,
+				DerivedCoroutine * child);
+
+			template<class ...Args>
+			inline void operator()(
+				Args&& ...args) const;
+		};
+
+		/** Creates a LibcrChildStartCall with this as child.
+		@param[in] parent:
+			The calling coroutine.
+		@return
+			The LibcrChildStartCall object. */
+		constexpr LibcrChildStartCall libcr_child_start_call(
+			Coroutine * parent);
 	};
 }
 

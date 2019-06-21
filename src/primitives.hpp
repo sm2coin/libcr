@@ -51,14 +51,14 @@
 
 		try { await cv.wait(); }
 		catch(...) { something(); } */
-#define CR_AWAIT(...) LIBCR_HELPER_OVERLOAD(LIBCR_HELPER_AWAIT, __VA_ARGS__)
+#define CR_AWAIT(...) LIBCR_HELPER_OVERLOAD(LIBCR_HELPER_AWAIT, 0, __VA_ARGS__)
 
-#define LIBCR_HELPER_AWAIT1(operation) LIBCR_HELPER_AWAIT2(operation, CR_THROW)
-#define LIBCR_HELPER_AWAIT2(operation, error) LIBCR_HELPER_AWAIT(__COUNTER__, operation, error)
+#define LIBCR_HELPER_AWAIT2(_, operation) LIBCR_HELPER_AWAIT3(0, operation, CR_THROW)
+#define LIBCR_HELPER_AWAIT3(_, operation, error) LIBCR_HELPER_AWAIT(__COUNTER__, operation, error)
 #define LIBCR_HELPER_AWAIT(id, operation, error) do { \
 	LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_AWAIT"); \
 	LIBCR_HELPER_SAVE(id); \
-	if(::cr::sync::block() == ::cr::Coroutine::libcr_unpack_wait(operation)) \
+	if(::cr::sync::block() == ::cr::Coroutine::libcr_unpack_wait((operation))) \
 		return; \
 	LIBCR_HELPER_LABEL(id):; \
 	if(::cr::Coroutine::libcr_error) \
@@ -111,14 +111,14 @@
 
 		try { await connection.receive(buffer, buffer_size); }
 		catch(...) { something(); } */
-#define CR_CALL(...) LIBCR_HELPER_OVERLOAD(LIBCR_HELPER_CALL, __VA_ARGS__)
-#define LIBCR_HELPER_CALL2(coroutine, args) LIBCR_HELPER_CALL3(coroutine, args, CR_THROW)
-#define LIBCR_HELPER_CALL3(coroutine, args, error) LIBCR_HELPER_CALL(__COUNTER__, coroutine, args, error)
+#define CR_CALL(...) LIBCR_HELPER_OVERLOAD(LIBCR_HELPER_CALL, 0, __VA_ARGS__)
+#define LIBCR_HELPER_CALL3(_, coroutine, args) LIBCR_HELPER_CALL4(0, coroutine, args, CR_THROW)
+#define LIBCR_HELPER_CALL4(_, coroutine, args, error) LIBCR_HELPER_CALL(__COUNTER__, coroutine, args, error)
 #define LIBCR_HELPER_CALL(id, coroutine, args, error) do { \
 	LIBCR_HELPER_ASSERT_COROUTINE_SELF("CR_CALL"); \
 	LIBCR_HELPER_ASSERT_COROUTINE("CR_CALL", decltype(coroutine)); \
 	LIBCR_HELPER_CALL_PREFIX(id, coroutine); \
-	coroutine.start LIBCR_HELPER_PREPARE args; \
+	(coroutine).libcr_child_start_call(this) args; \
 	LIBCR_HELPER_CALL_SUFFIX(id, coroutine, error); \
 } while(0)
 #define LIBCR_HELPER_CALL_PREFIX(id, coroutine) do {\
@@ -144,7 +144,7 @@
 #define LIBCR_HELPER_CALL_PREPARED2(coroutine, error) LIBCR_HELPER_CALL_PREPARED(__COUNTER__, coroutine, error)
 #define LIBCR_HELPER_CALL_PREPARED(id, coroutine, error) do { \
 	LIBCR_HELPER_CALL_PREFIX(id, coroutine); \
-	coroutine.start_prepared(); \
+	(coroutine).start_prepared(); \
 	LIBCR_HELPER_CALL_SUFFIX(id, coroutine, error); \
 } while(0)
 
@@ -339,6 +339,7 @@ public: \
 	using LibCrBase::start; \
 	using LibCrBase::prepare; \
 	using LibCrBase::start_prepared; \
+	using LibCrBase::libcr_child_start_call; \
 	name() = default; \
 	template<class Arg0, class ...Args> \
 	name(Arg0 arg0, Args&& ...args) \

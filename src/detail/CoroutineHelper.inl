@@ -80,4 +80,31 @@ namespace cr::detail
 
 		static_cast<DerivedCoroutine *>(this)->_cr_implementation();
 	}
+
+	template<class DerivedCoroutine>
+	constexpr CoroutineHelper<DerivedCoroutine>::LibcrChildStartCall::LibcrChildStartCall(
+		Coroutine * parent,
+		DerivedCoroutine * child):
+		m_parent(parent),
+		m_child(child)
+	{
+	}
+
+	template<class DerivedCoroutine>
+	template<class ...Args>
+	void CoroutineHelper<DerivedCoroutine>::LibcrChildStartCall::operator()(
+		Args&& ...args) const
+	{
+		m_child->start(
+			m_parent,
+			std::forward<Args>(args)...);
+	}
+
+	template<class DerivedCoroutine>
+	constexpr typename CoroutineHelper<DerivedCoroutine>::LibcrChildStartCall
+		CoroutineHelper<DerivedCoroutine>::libcr_child_start_call(
+			Coroutine * parent)
+	{
+		return LibcrChildStartCall(parent, static_cast<DerivedCoroutine *>(this));
+	}
 }

@@ -54,8 +54,8 @@
 
 // ASSERTS
 
-#define LIBCR_HELPER_ASSERT_PROTOTHREAD(primitive, type) static_assert(!std::is_base_of<::cr::Coroutine, type>::value, "'" primitive "' can only be used with PROTOTHREADs!")
-#define LIBCR_HELPER_ASSERT_COROUTINE(primitive, type) static_assert(std::is_base_of<::cr::Coroutine, type>::value, "'" primitive "' can only be used with COROUTINEs!")
+#define LIBCR_HELPER_ASSERT_PROTOTHREAD(primitive, type) static_assert(!std::is_base_of<::cr::Coroutine, std::decay_t<type>>::value, "'" primitive "' can only be used with PROTOTHREADs!")
+#define LIBCR_HELPER_ASSERT_COROUTINE(primitive, type) static_assert(std::is_base_of<::cr::Coroutine, std::decay_t<type>>::value, "'" primitive "' can only be used with COROUTINEs!")
 #define LIBCR_HELPER_ASSERT_PROTOTHREAD_SELF(name) LIBCR_HELPER_ASSERT_PROTOTHREAD(name, LibCrSelf)
 #define LIBCR_HELPER_ASSERT_COROUTINE_SELF(name) LIBCR_HELPER_ASSERT_COROUTINE(name, LibCrSelf)
 
