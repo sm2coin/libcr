@@ -10,7 +10,7 @@
 #ifdef LIBCR_DEBUG
 /** @def LIBCR_MAGIC_NUMBER
 	A random number that is used to check whether a coroutine was properly initialised. */
-#define LIBCR_MAGIC_NUMBER 0x38eee375b1b29314
+#define LIBCR_MAGIC_NUMBER static_cast<std::size_t>(0x38eee375b1b29314)
 #endif
 
 
