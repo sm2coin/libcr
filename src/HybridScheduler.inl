@@ -1,5 +1,6 @@
 #include <timer/Timer.hpp>
 #include <thread>
+#include <cstdlib>
 
 namespace cr
 {
@@ -10,7 +11,8 @@ namespace cr
 	HybridScheduler<MtCV, SyncCV>::ThreadContext::ThreadContext():
 		global_cv(),
 		local_cv(),
-		load(~(time_t)0)
+		load((~(time_t)0)>>11), // prevent overflow
+		rng(rand())
 	{
 	}
 
@@ -19,7 +21,7 @@ namespace cr
 		std::size_t threads)
 	{
 		if(threads < 2)
-			threads = 2;
+			threads = 1;
 		m_busy_thread.store(0, std::memory_order_relaxed);
 		m_idle_thread.store(0, std::memory_order_relaxed);
 		m_threads.~vector();
@@ -55,7 +57,7 @@ namespace cr
 	template<class MtCV, class SyncCV>
 	HybridScheduler<MtCV, SyncCV>::HybridScheduler():
 		m_threads(std::thread::hardware_concurrency()),
-		m_busy_thread(0),
+		m_busy_thread(1),
 		m_idle_thread(0)
 	{
 	}
@@ -64,16 +66,32 @@ namespace cr
 	bool HybridScheduler<MtCV, SyncCV>::schedule(
 		std::size_t thread)
 	{
-		std::size_t busy = m_busy_thread.load_weak(std::memory_order_relaxed);
-		bool balance = busy == thread;
+		std::size_t busy;
+		bool balance = false;
+		std::uint8_t balance_odds;
+		std::size_t idle_thread;
+
+		if(m_threads.size() != 1)
+		{
+			busy = m_busy_thread.load_weak(std::memory_order_relaxed);
+			balance = busy == thread;
+			if(balance)
+			{
+				idle_thread = m_idle_thread.load_weak(std::memory_order_relaxed);
+				if((balance = idle_thread != busy))
+				{
+					auto idle_time = m_threads[idle_thread].load.load_weak(std::memory_order_relaxed);
+					auto busy_time = m_threads[busy].load.load_weak(std::memory_order_relaxed);
+					balance_odds = (time_t(256)*busy_time) / (busy_time + idle_time + time_t(1));
+					if(balance_odds < 3)
+						balance = false;
+				}
+			}
+		}
 
 		ThreadContext &ctx = m_threads[thread];
 		Coroutine * gfirst, * glast;
 		bool result = ctx.global_cv.remove_all(gfirst, glast);
-
-		std::uint8_t counter = 0;
-		// Every 64th coroutine is balanced.
-		static constexpr std::uint8_t k_balance_mask = 0x3f;
 
 		timer::Timer<std::chrono::microseconds> timer;
 		Coroutine * lfirst;
@@ -82,34 +100,54 @@ namespace cr
 
 		Coroutine * next;
 
+		Coroutine * q_first = nullptr, * q_last = nullptr;
+
 		timer.start();
 
 		while(lfirst)
 		{
 			next = lfirst->libcr_next_waiting.plain;
-			if(balance
-			&& (counter++ & k_balance_mask) == 0)
-				lfirst->libcr_thread = detail::Thread::kInvalid;
-
-			(*lfirst)();
+			if(balance && ctx.rng.flip(balance_odds))
+			{
+				lfirst->libcr_thread = (detail::Thread) idle_thread;
+				if(!q_first)
+					q_first = lfirst;
+				else
+					q_last->libcr_next_waiting.plain = lfirst;
+				q_last = lfirst;
+			}
+			else
+				(*lfirst)();
 			lfirst = next;
 		}
 
 		while(gfirst)
 		{
 			next = MtCV::acquire_and_complete(gfirst, glast);
-			if(balance)
-				gfirst->libcr_thread = detail::Thread::kInvalid;
-
-			(*gfirst)();
+			if(balance && ctx.rng.flip(balance_odds))
+			{
+				gfirst->libcr_thread = (detail::Thread) idle_thread;
+				if(!q_first)
+					q_first = gfirst;
+				else
+					q_last->libcr_next_waiting.plain = gfirst;
+				q_last = gfirst;
+			}
+			else
+				(*gfirst)();
 			gfirst = next;
 		}
 
-		// The first thread updates the statistics.
-		if(thread == 0)
-			detect_load();
+		if(q_first)
+			(void)m_threads[idle_thread].global_cv.wait(false).libcr_wait(q_first, q_last);
 
-		ctx.load.store(timer.stop(), std::memory_order_relaxed);
+		// The first thread updates the statistics.
+		if(m_threads.size() != 1)
+		{
+			if(thread == 0)
+				detect_load();
+			ctx.load.store(timer.stop(), std::memory_order_relaxed);
+		}
 
 		return result;
 	}

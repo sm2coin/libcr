@@ -6,6 +6,7 @@
 #include "detail/Thread.hpp"
 #include "util/Atomic.hpp"
 #include "sync/Block.hpp"
+#include "util/Rng.hpp"
 
 #include <vector>
 
@@ -22,7 +23,7 @@ namespace cr
 		/** The static scheduler instance. */
 		static HybridScheduler<MtCV, SyncCV> s_instance;
 
-		typedef std::size_t time_t;
+		typedef std::uint64_t time_t;
 		/** Thread context type. */
 		struct ThreadContext
 		{
@@ -34,6 +35,8 @@ namespace cr
 			SyncCV local_cv;
 			/** The time needed to execute all coroutines once. */
 			util::Atomic<time_t> load;
+			/** The thread's scheduling RNG. */
+			util::Rng rng;
 		};
 
 		/** The scheduler's thread contexts. */
