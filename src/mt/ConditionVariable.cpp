@@ -11,19 +11,20 @@ namespace cr::mt
 	}
 
 	sync::block PODFIFOConditionVariable::WaitCall::libcr_wait(
-		Coroutine * coroutine)
+		Coroutine * coroutine,
+		Coroutine * last)
 	{
 		assert(coroutine != nullptr);
 
 		if(m_invalidate_thread)
 			coroutine->libcr_thread = detail::Thread::kInvalid;
 
-		coroutine->libcr_next_waiting.atomic.release();
+		last->libcr_next_waiting.atomic.release();
 
 		// Make the coroutine the last coroutine.
 		// Release ordering because this must not be reordered before the releasing of the coroutine.
-		Coroutine * last = m_cv.m_last_waiting.exchange(
-			coroutine,
+		last = m_cv.m_last_waiting.exchange(
+			last,
 			std::memory_order_release);
 
 		// `last` is now the previously last coroutine.
@@ -232,7 +233,8 @@ namespace cr::mt
 	}
 
 	sync::block PODConditionVariable::WaitCall::libcr_wait(
-		Coroutine * coroutine)
+		Coroutine * coroutine,
+		Coroutine * last)
 	{
 		assert(coroutine != nullptr);
 
@@ -245,9 +247,9 @@ namespace cr::mt
 		do {
 			// Release the coroutine and set its successor to be the first waiting coroutine.
 			if(first)
-				coroutine->libcr_next_waiting.atomic.release_with_next(first);
+				last->libcr_next_waiting.atomic.release_with_next(first);
 			else
-				coroutine->libcr_next_waiting.atomic.release();
+				last->libcr_next_waiting.atomic.release();
 			// The first coroutine might have changed, so try until succeeds.
 		} while(!m_cv.m_waiting.compare_exchange_weak(
 			first,

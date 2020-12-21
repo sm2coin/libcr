@@ -53,7 +53,10 @@ namespace cr::mt
 			@return
 				Whether the call blocks. */
 			[[nodiscard]] sync::block libcr_wait(
-				Coroutine * coroutine);
+				Coroutine * coroutine) { return libcr_wait(coroutine, coroutine); }
+			[[nodiscard]] sync::block libcr_wait(
+				Coroutine * coroutine,
+				Coroutine * last);
 		};
 
 		/** Adds a coroutine to the queue.
@@ -167,7 +170,10 @@ namespace cr::mt
 			@return
 				Whether the call blocks. */
 			[[nodiscard]] sync::block libcr_wait(
-				Coroutine * coroutine);
+				Coroutine * coroutine) { return libcr_wait(coroutine, coroutine); }
+			[[nodiscard]] sync::block libcr_wait(
+				Coroutine * coroutine,
+				Coroutine * last);
 		};
 
 		/** Adds a coroutine to the queue.
