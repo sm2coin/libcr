@@ -5,6 +5,7 @@
 
 #include "Semaphore.hpp"
 #include "../primitives.hpp"
+#include <array>
 
 namespace cr::sync
 {
