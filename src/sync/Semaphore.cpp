@@ -1,4 +1,11 @@
+#ifndef __libcr_sync_semaphore_cpp_defined
+#define __libcr_sync_semaphore_cpp_defined
+
+#ifndef LIBCR_SYNC_SEMAPHORE_INLINE
 #include "Semaphore.hpp"
+#else
+#undef LIBCR_SYNC_SEMAPHORE_INLINE
+#endif
 
 namespace cr::sync
 {
@@ -45,3 +52,5 @@ namespace cr::sync
 	template class SemaphorePattern<PODConditionVariable>;
 	template class SemaphorePattern<PODFIFOConditionVariable>;
 }
+
+#endif

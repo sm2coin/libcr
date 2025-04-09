@@ -1,4 +1,11 @@
+#ifndef __libcr_sync_conditionvariable_cpp_defined
+#define __libcr_sync_conditionvariable_cpp_defined
+
+#ifndef LIBCR_SYNC_CONDITIONVARIABLE_INLINE
 #include "ConditionVariable.hpp"
+#else
+#undef LIBCR_SYNC_CONDITIONVARIABLE_INLINE
+#endif
 #include "../Coroutine.hpp"
 
 #include "Barrier.hpp"
@@ -263,3 +270,5 @@ namespace cr::sync
 		assert(!front() && "Coroutines were added illegally.");
 	}
 }
+
+#endif

@@ -30,3 +30,8 @@ namespace cr::sync
 		return ConsumeCall(*this);
 	}
 }
+
+#ifdef LIBCR_INLINE
+#define LIBCR_SYNC_EVENT_INLINE
+#include "Event.cpp"
+#endif

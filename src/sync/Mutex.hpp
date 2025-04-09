@@ -3,6 +3,12 @@
 #ifndef __libcr_sync_mutex_hpp_defined
 #define __libcr_sync_mutex_hpp_defined
 
+#ifdef LIBCR_INLINE
+#define __LIBCR_INLINE inline
+#else
+#define __LIBCR_INLINE
+#endif
+
 #include "ConditionVariable.hpp"
 
 namespace cr::sync
@@ -16,7 +22,7 @@ namespace cr::sync
 		Coroutine * m_owner;
 	public:
 		/** Initialises the mutex. */
-		void initialise();
+		__LIBCR_INLINE void initialise();
 
 		/** Helper type that simplifies usage of `lock()` with `#CR_AWAIT`. */
 		class LockCall
@@ -35,7 +41,7 @@ namespace cr::sync
 				The coroutine locking the mutex.
 			@return
 				Whether the mutex was successfully locked. */
-			mayblock libcr_wait(
+			__LIBCR_INLINE mayblock libcr_wait(
 				Coroutine * self);
 		};
 
@@ -49,12 +55,12 @@ namespace cr::sync
 			The coroutine trying to acquire the mutex.
 		@return
 			Whether the lock was acquired. */
-		bool try_lock(
+		__LIBCR_INLINE bool try_lock(
 			Coroutine * self);
 
 		/** Unlocks the mutex.
 			Automatically gives ownership to the first waiting coroutine. */
-		void unlock();
+		__LIBCR_INLINE void unlock();
 
 		/** Checks for mutex ownership.
 		@param[in] self:
@@ -69,7 +75,7 @@ namespace cr::sync
 	class Mutex : PODMutex
 	{
 	public:
-		Mutex();
+		__LIBCR_INLINE Mutex();
 
 		using PODMutex::lock;
 		using PODMutex::try_lock;

@@ -17,3 +17,8 @@ namespace cr::sync
 		return LockCall(*this);
 	}
 }
+
+#ifdef LIBCR_INLINE
+#define LIBCR_SYNC_MUTEX_INLINE
+#include "Mutex.cpp"
+#endif

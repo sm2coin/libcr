@@ -1,9 +1,22 @@
+#ifndef __libcr_sync_mutex_cpp_defined
+#define __libcr_sync_mutex_cpp_defined
+
+#ifndef LIBCR_SYNC_MUTEX_INLINE
 #include "Mutex.hpp"
+#else
+#undef LIBCR_SYNC_MUTEX_INLINE
+#endif
 #include "../Coroutine.hpp"
 #include "Promise.hpp"
 
 namespace cr::sync
 {
+	void PODMutex::initialise()
+	{
+		m_cv.initialise();
+		m_owner = nullptr;
+	}
+
 	mayblock PODMutex::LockCall::libcr_wait(
 		Coroutine * self)
 	{
@@ -43,3 +56,5 @@ namespace cr::sync
 		initialise();
 	}
 }
+
+#endif

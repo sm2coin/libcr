@@ -13,3 +13,8 @@ namespace cr::sync
 		return WaitCall(*this);
 	}
 }
+
+#ifdef LIBCR_INLINE
+#define LIBCR_SYNC_SEMAPHORE_INLINE
+#include "Semaphore.cpp"
+#endif

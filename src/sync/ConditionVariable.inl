@@ -42,3 +42,8 @@ namespace cr::sync
 		return m_waiting;
 	}
 }
+
+#ifdef LIBCR_INLINE
+#define LIBCR_SYNC_CONDITIONVARIABLE_INLINE
+#include "ConditionVariable.cpp"
+#endif

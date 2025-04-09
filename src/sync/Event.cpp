@@ -1,4 +1,12 @@
+#ifndef __libcr_sync_event_cpp_defined
+#define __libcr_sync_event_cpp_defined
+
+#ifndef LIBCR_SYNC_EVENT_INLINE
 #include "Event.hpp"
+#else
+#undef LIBCR_SYNC_EVENT_INLINE
+#endif
+
 #include <cassert>
 
 namespace cr::sync
@@ -86,3 +94,5 @@ namespace cr::sync
 	template class ConsumableEventPattern<PODConditionVariable>;
 	template class ConsumableEventPattern<PODFIFOConditionVariable>;
 }
+
+#endif

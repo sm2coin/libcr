@@ -3,6 +3,12 @@
 #ifndef __libcr_sync_event_hpp_defined
 #define __libcr_sync_event_hpp_defined
 
+#ifdef LIBCR_INLINE
+#define __LIBCR_INLINE inline
+#else
+#define __LIBCR_INLINE
+#endif
+
 #include "ConditionVariable.hpp"
 #include "Block.hpp"
 
@@ -24,15 +30,15 @@ namespace cr::sync
 		bool m_happened;
 	public:
 		/** Initialises the event. */
-		void initialise();
+		__LIBCR_INLINE void initialise();
 
 		/** Sets the event.
 			Notifies all waiting coroutines. The event must not have happened already. */
-		void fire();
+		__LIBCR_INLINE void fire();
 
 		/** Clears the event.
 			The event must have happened already. */
-		void clear();
+		__LIBCR_INLINE void clear();
 
 		/** Helper class for waiting for an event using `#CR_AWAIT`. */
 		class WaitCall
@@ -52,7 +58,7 @@ namespace cr::sync
 				The coroutine to wait for the event.
 			@return
 				Whether the call blocks. */
-			[[nodiscard]] mayblock libcr_wait(
+			[[nodiscard]] __LIBCR_INLINE mayblock libcr_wait(
 				Coroutine * coroutine);
 		};
 
@@ -94,7 +100,7 @@ namespace cr::sync
 
 		/** Notifies only one coroutine.
 			The event is only set if no coroutine is waiting. */
-		void fire();
+		__LIBCR_INLINE void fire();
 
 		/** Helper class for waiting for a consumable event using `#CR_AWAIT`. */
 		class ConsumeCall
@@ -113,7 +119,7 @@ namespace cr::sync
 				The coroutine waiting for the event.
 			@return
 				Whether the call blocks. */
-			[[nodiscard]] mayblock libcr_wait(
+			[[nodiscard]] __LIBCR_INLINE mayblock libcr_wait(
 				Coroutine * coroutine);
 		};
 

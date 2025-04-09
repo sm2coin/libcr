@@ -5,6 +5,14 @@
 
 #include "Block.hpp"
 
+
+#ifdef LIBCR_INLINE
+#define __LIBCR_INLINE inline
+#else
+#define __LIBCR_INLINE
+#endif
+
+
 namespace cr
 {
 	class Coroutine;
@@ -24,7 +32,7 @@ namespace cr::sync
 		Coroutine * m_last_waiting;
 	public:
 		/** Initialises the waiting queue. */
-		void initialise();
+		__LIBCR_INLINE void initialise();
 
 		/** Whether the waiting list is empty. */
 		inline bool empty() const;
@@ -46,7 +54,7 @@ namespace cr::sync
 				The coroutine to add to the waiting queue.
 			@return
 				Whether the call blocks. */
-			block libcr_wait(
+			__LIBCR_INLINE block libcr_wait(
 				Coroutine * coroutine);
 		};
 
@@ -60,37 +68,37 @@ namespace cr::sync
 			Removes the notified coroutine from the waiting queue.
 		@return
 			Whether a coroutine was removed. */
-		bool notify_one();
+		__LIBCR_INLINE bool notify_one();
 
 		/** Notifies the first waiting coroutine, if exists, and sets its error flag.
 			Removes the notified coroutine from the waiting queue.
 		@return
 			Whether a coroutine was notified. */
-		bool fail_one();
+		__LIBCR_INLINE bool fail_one();
 
 		/** Removes the first waiting coroutine, if exists.
 			Does not notify the removed coroutine.
 		@return
 			The removed coroutine, or null. */
-		Coroutine * remove_one();
+		__LIBCR_INLINE Coroutine * remove_one();
 
 		/** Notifies all waiting coroutines.
 			Only notifies and removes coroutines that were waiting before the call, not those added during the call.
 		@return
 			Whether any coroutine was executed. */
-		bool notify_all();
+		__LIBCR_INLINE bool notify_all();
 
 		/** Notifies all waiting coroutines, and sets their error flags.
 			Only notifies and removes coroutines that were waiting before the call, not those added during the call.
 		@return
 			Whether a coroutine was notified. */
-		bool fail_all();
+		__LIBCR_INLINE bool fail_all();
 
 		/** Removes all waiting coroutines.
 			Does not notify the removed coroutines.
 		@return
 			The first removed coroutine, or null. */
-		Coroutine * remove_all();
+		__LIBCR_INLINE Coroutine * remove_all();
 	};
 
 	/** Condition variable with FIFO notifications.
@@ -100,10 +108,10 @@ namespace cr::sync
 		using PODFIFOConditionVariable::initialise;
 	public:
 		/** Initialises the condition variable. */
-		FIFOConditionVariable();
+		__LIBCR_INLINE FIFOConditionVariable();
 		/** Destroys the condition variable.
 			Calls `fail_all()`. */
-		~FIFOConditionVariable();
+		__LIBCR_INLINE ~FIFOConditionVariable();
 	};
 
 	/** POD condition variable, with LIFO notifications. */
@@ -113,7 +121,7 @@ namespace cr::sync
 		Coroutine * m_waiting;
 	public:
 		/** Initialises the object. */
-		void initialise();
+		__LIBCR_INLINE void initialise();
 
 		/** Whether no coroutine is currently waiting. */
 		inline bool empty() const;
@@ -136,7 +144,7 @@ namespace cr::sync
 				The coroutine to add to the waiting queue.
 			@return
 				Whether the call blocks. */
-			block libcr_wait(
+			__LIBCR_INLINE block libcr_wait(
 				Coroutine * coroutine);
 		};
 
@@ -149,36 +157,36 @@ namespace cr::sync
 		/** Notifies the waiting coroutine, if exists.
 		@return
 			Whether a coroutine was notified. */
-		bool notify_one();
+		__LIBCR_INLINE bool notify_one();
 
 		/** Notifies the first waiting coroutine, if exists, and sets its error flag.
 			Removes the notified coroutine from the waiting queue.
 		@return
 			Whether a coroutine was notified. */
-		bool fail_one();
+		__LIBCR_INLINE bool fail_one();
 
 		/** Removes the first waiting coroutine, if exists.
 			Does not notify the removed coroutine.
 		@return
 			The removed coroutine, or null. */
-		Coroutine * remove_one();
+		__LIBCR_INLINE Coroutine * remove_one();
 
 		/** Notifies all waiting coroutines.
 		@return
 			Whether any coroutine was executed. */
-		bool notify_all();
+		__LIBCR_INLINE bool notify_all();
 
 		/** Notifies all waiting coroutines, and sets their error flags.
 			Only notifies and removes coroutines that were waiting before the call, not those added during the call.
 		@return
 			Whether a coroutine was notified. */
-		bool fail_all();
+		__LIBCR_INLINE bool fail_all();
 
 		/** Removes all waiting coroutines.
 			Does not notify the removed coroutines.
 		@return
 			The first removed coroutine, or null. */
-		Coroutine * remove_all();
+		__LIBCR_INLINE Coroutine * remove_all();
 	};
 
 	/** Condition variable with LIFO notifications.
@@ -188,10 +196,10 @@ namespace cr::sync
 		using PODConditionVariable::initialise;
 	public:
 		/** Initialises the condition variable. */
-		ConditionVariable();
+		__LIBCR_INLINE ConditionVariable();
 		/** Destroys the condition variable.
 			Calls `fail_all()`. */
-		~ConditionVariable();
+		__LIBCR_INLINE ~ConditionVariable();
 	};
 
 	typedef cr::SchedulerPattern<FIFOConditionVariable> FIFOScheduler;
